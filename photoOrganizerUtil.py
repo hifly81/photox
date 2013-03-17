@@ -11,7 +11,7 @@ import logging
 import logging.config
 from gi.repository import Gtk
 from PIL import Image
-from PIL.ExifTags import TAGS
+from PIL.ExifTags import TAGS,GPSTAGS
 
 logging.config.fileConfig('config/logging.conf')
 logger = logging.getLogger('photoOrganizer')
@@ -115,6 +115,7 @@ def get_exif_data(fname):
                 for tag, value in exifinfo.items():
                     decoded = TAGS.get(tag, tag)
                     ret[decoded] = value
+
                 photoFile = PhotoFile()    
                 if(ret.has_key('DateTimeDigitized')):    
                     photoFile.date=ret['DateTimeDigitized']
@@ -130,4 +131,5 @@ def get_exif_data(fname):
                     photoFile.height=ret['ExifImageHeight'] 
     except IOError:
         logger.error("IOERROR %s",fname)
-    return photoFile   
+    return photoFile  
+

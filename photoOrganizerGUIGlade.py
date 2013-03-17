@@ -37,7 +37,6 @@ UI_INFO = """
     <menuitem action='EditOriginalSize' />
     <menuitem action='EditFlip' />
     <menuitem action='EditRotate' />
-    <menuitem action='EditDetails' />
     <menuitem action='EditSave' />
   </popup>
 </ui>
@@ -203,21 +202,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         pixbuf = self.imageOpened.get_pixbuf()
         scaled_buf = pixbuf.flip(30)
         self.imageOpened.set_from_pixbuf(scaled_buf) 
-    
-    def on_PhotoOrganizer_details_clicked(self, widget):
-        if(self.twitterSearch==True):
-            mediaUrl = self.imagePathOpened
-            for entry in self.twitterSearchResult.entries:
-                try:
-                    if(entry.url.index(mediaUrl)!=-1):
-                        self.imageOpened.set_tooltip_text(entry.author+":"+entry.text)
-                        self.imageOpened.show_all()
-                        self.builder.get_object("detailsEntry").set_text(entry.author+":"+entry.text)
-                except:
-                    logger.error("no detail for item")      
-        else:
-            print 'TODO'
-    
+
     def on_PhotoOrganizer_save_clicked(self, widget):
         print 'TODO'
     
@@ -275,8 +260,6 @@ class PhotoOrganizerGUI(Gtk.Window):
              self.on_PhotoOrganizer_flip_clicked),
             ("EditRotate", Gtk.STOCK_REFRESH, "Rotate", "<control><alt>R", None,
              self.on_PhotoOrganizer_rotate_clicked),
-            ("EditDetails", Gtk.STOCK_ORIENTATION_PORTRAIT, "Details", "<control><alt>D", None,
-             self.on_PhotoOrganizer_details_clicked),
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])
@@ -321,6 +304,17 @@ class PhotoOrganizerGUI(Gtk.Window):
         pimage.set_from_pixbuf(scaled_buf)
         self.imagePathOpened = imagePath
         self.createImagePanel(pimage,imagePath)
+        
+        if(self.twitterSearch):
+            mediaUrl = self.imagePathOpened
+            for entry in self.twitterSearchResult.entries:
+                try:
+                    if(entry.url.index(mediaUrl)!=-1):
+                        self.imageOpened.set_tooltip_text("user:"+entry.author+"\ndate:"+entry.creationDate+"\ntext:"+entry.text)
+                        self.imageOpened.show_all()
+                        self.builder.get_object("detailsEntry").get_buffer().set_text("user:"+entry.author+"\ndate:"+entry.creationDate+"\ntext:"+entry.text)
+                except:
+                    logger.error("Error in show details..")
     
       #create image viewer panel
     def createImagePanel(self,pimage,imageName):    
