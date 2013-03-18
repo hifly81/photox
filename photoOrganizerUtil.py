@@ -6,6 +6,7 @@ Created on Mar 25, 2012
 
 import sys
 import os
+import urllib
 import imghdr
 import logging
 import logging.config
@@ -132,4 +133,10 @@ def get_exif_data(fname):
     except IOError:
         logger.error("IOERROR %s",fname)
     return photoFile  
+
+def savePhotoFromUrl(url,filename):
+    f = open( filename, 'wb' )
+    data = urllib.urlopen(url).read()
+    f.write( data )
+    f.close()
 

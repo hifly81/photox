@@ -16,7 +16,6 @@ from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
 from PIL import Image
 from twitterUtil import TwitterSearchResult
 from photoOrganizerStorage import PhotoOrganizerPref
-from photoOrganizerStorage import PhotoOrganizerPref
 from photoOrganizerUtil import AlbumCollection
 from photoOrganizerUtil import Album
 from photoOrganizerUtil import PhotoFile
@@ -51,13 +50,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.thubnailPanel = {}
         self.twitterCurrentQuery = None
         self.currenWinImage = None
-        
-        #load preferences
-        photoOrganizerPref = photoOrganizerStorage.loadPref()
         self.entry_folder_text = None
-        if(photoOrganizerPref!=None):
-            self.entry_folder_text = photoOrganizerPref.lastSearch
-        self.hiddenFolders = photoOrganizerPref.hiddenFolders
         
         #build GUI from glade
         self.builder = Gtk.Builder()
@@ -75,11 +68,29 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.window = self.builder.get_object("PhotoOrganizer")
         self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)
         self.window.show_all()
+        
+        #load pref
+        self.loadPreferences()
+        
+        #main gtk
         Gtk.main()
    
+    def loadPreferences(self):
+        #load preferences
+        photoOrganizerPref = photoOrganizerStorage.loadPref()
+        if(photoOrganizerPref!=None):
+            self.hiddenFolders = photoOrganizerPref.hiddenFolders
+            self.entry_folder_text = photoOrganizerPref.lastSearch
+            self.createTwitterPhotoTree(photoOrganizerPref.albumCollection)
+            leftPanel = self.builder.get_object("leftPanel")
+            leftPanel.add(self.treeview)
+            leftPanel.show_all()
+            self.twitterSearch = False
+            
     def on_PhotoOrganizer_delete_event  (self, *args):
-        #save the preferences
-        photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text)
+        if(self.lastAlbumCollectionScanned is not None):
+            #save the preferences
+            photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text,self.lastAlbumCollectionScanned)
         photoOrganizerStorage.savePref(photoFile)
         Gtk.main_quit()
     
@@ -204,8 +215,21 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.imageOpened.set_from_pixbuf(scaled_buf) 
 
     def on_PhotoOrganizer_save_clicked(self, widget):
-        print 'TODO'
-    
+        dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
+        dialog.set_default_size(800, 400)
+     
+        Gtk.FileChooser.set_do_overwrite_confirmation(dialog, True)
+        Gtk.FileChooser.set_current_name(dialog, "Untitled document")
+
+        response = dialog.run()
+        
+        if response == Gtk.ResponseType.ACCEPT:
+            filename = dialog.get_filename()
+            dialog.destroy()
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+            photoOrganizerUtil.savePhotoFromUrl(self.lastTwitterImageUrl,filename)
+           
     def on_PhotoOrganizer_image_keypress_event(self,widget,event) :
         newImagePath = None
         keyname = Gdk.keyval_name(event.keyval)
@@ -337,7 +361,8 @@ class PhotoOrganizerGUI(Gtk.Window):
           try:
               imagePanel.remove(imagePanel.get_children()[0])
           except:
-              logger.error("skip remove image")
+              #nothing to do
+              pass
           if(imagePath in self.thubnailPanel):
                imagePanel.add(self.thubnailPanel[imagePath])
                imagePanel.show_all()
@@ -411,6 +436,7 @@ class PhotoOrganizerGUI(Gtk.Window):
 
         # call retrieve album list
         albumCollection,imageDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,self.treeview,self.imageMap,leftPanel)
+        self.lastAlbumCollectionScanned = albumCollection 
         #create tree panel
         if len(albumCollection.albums) >0:
             self.imageMap = imageDictionary
