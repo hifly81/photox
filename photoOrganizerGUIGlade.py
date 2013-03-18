@@ -79,13 +79,17 @@ class PhotoOrganizerGUI(Gtk.Window):
         #load preferences
         photoOrganizerPref = photoOrganizerStorage.loadPref()
         if(photoOrganizerPref!=None):
-            self.hiddenFolders = photoOrganizerPref.hiddenFolders
-            self.entry_folder_text = photoOrganizerPref.lastSearch
-            self.createTwitterPhotoTree(photoOrganizerPref.albumCollection)
-            leftPanel = self.builder.get_object("leftPanel")
-            leftPanel.add(self.treeview)
-            leftPanel.show_all()
-            self.twitterSearch = False
+            try:
+                self.hiddenFolders = photoOrganizerPref.hiddenFolders
+                self.entry_folder_text = photoOrganizerPref.lastSearch
+                self.createTwitterPhotoTree(photoOrganizerPref.albumCollection)
+                leftPanel = self.builder.get_object("leftPanel")
+                leftPanel.add(self.treeview)
+                leftPanel.show_all()
+                self.twitterSearch = False
+            #some pref properties stored could be not present --> no previous search available
+            except:
+                pass
             
     def on_PhotoOrganizer_delete_event  (self, *args):
         if(self.lastAlbumCollectionScanned is not None):
@@ -339,8 +343,12 @@ class PhotoOrganizerGUI(Gtk.Window):
                         self.builder.get_object("detailsEntry").get_buffer().set_text("user:"+entry.author+"\ndate:"+entry.creationDate+"\ntext:"+entry.text)
                 except:
                     logger.error("Error in show details..")
+        else:
+            currentPhoto = self.totalPhotoDictionary[imagePath]
+            if currentPhoto.latitude:
+                self.builder.get_object("detailsEntry").get_buffer().set_text("photo taken at:\nlatitude:"+str(currentPhoto.latitude)+"\nlongitude:"+str(currentPhoto.longitude))
     
-      #create image viewer panel
+    #create image viewer panel
     def createImagePanel(self,pimage,imageName):    
         imagePanel = self.builder.get_object("imagePanel")
         try:
@@ -435,8 +443,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         leftPanel = self.builder.get_object("leftPanel")
 
         # call retrieve album list
-        albumCollection,imageDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,self.treeview,self.imageMap,leftPanel)
+        albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,self.treeview,self.imageMap,leftPanel)
         self.lastAlbumCollectionScanned = albumCollection 
+        self.totalPhotoDictionary = photoDictionary
         #create tree panel
         if len(albumCollection.albums) >0:
             self.imageMap = imageDictionary

@@ -31,6 +31,8 @@ class PhotoFile:
     self.width = None
     self.height = None
     self.author = None
+    self.latitude = None
+    self.longitude = None
 
 class Album:
   def __init__(self):
@@ -52,6 +54,7 @@ class AlbumCollection:
 
 #scan dirs and searches for img
 def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,leftPanel):
+    photoDictionary = {}
     dirPath = dirPath.strip('\n')
     totalPicsFound = 0
     albumCollection = AlbumCollection()
@@ -87,6 +90,7 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                 subImageMap = {}
                 for photo in album.pics:
                     subImageMap[photo.fileName] = photo
+                    photoDictionary[album.title+"/"+photo.fileName] = photo
                     treestore.append(piter, ['%s' %album.title+"/"+photo.fileName])
                 imageMap[album.title] = subImageMap    
                 treeview.set_model(treestore)
@@ -103,7 +107,7 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
     logger.debug("Total pics found:%d"%totalPicsFound)  
     logger.debug("Albums found:%d"%len(albumCollection.albums))
     albumCollection.totalPics = totalPicsFound
-    return albumCollection,imageMap     
+    return albumCollection,imageMap,photoDictionary    
          
 def get_exif_data(fname):
     ret = {}
@@ -115,7 +119,11 @@ def get_exif_data(fname):
             if exifinfo != None:
                 for tag, value in exifinfo.items():
                     decoded = TAGS.get(tag, tag)
-                    ret[decoded] = value
+                    if decoded == "GPSInfo":
+                        lat,longit = extractCoordinates(value)  
+                    else:
+                        ret[decoded] = value
+                    
 
                 photoFile = PhotoFile()    
                 if(ret.has_key('DateTimeDigitized')):    
@@ -130,10 +138,48 @@ def get_exif_data(fname):
                     photoFile.width=ret['ExifImageWidth']
                 if(ret.has_key('ExifImageHeight')):     
                     photoFile.height=ret['ExifImageHeight'] 
+                    
+                if lat:
+                    photoFile.latitude = lat
+                if longit:
+                    photoFile.longitude = longit
+                                    
+                
     except IOError:
         logger.error("IOERROR %s",fname)
     return photoFile  
 
+def extractCoordinates(exifValue):
+    #geocoding
+    gpsData = {}
+    for gpsTag in exifValue:
+        tagElem = GPSTAGS.get(gpsTag, gpsTag)
+        gpsData[tagElem] = exifValue[gpsTag]
+    
+    if "GPSLatitude" in gpsData:
+        lat =  gpsData["GPSLatitude"]
+        lat = decimalCoordinatesToDegress(lat)
+    if "GPSLongitude" in gpsData:
+        longit =  gpsData["GPSLongitude"]
+        longit = decimalCoordinatesToDegress(longit)
+    if "GPSLatitudeRef" in gpsData:
+        latRef =  gpsData["GPSLatitudeRef"]
+    if "GPSLongitudeRef" in gpsData:
+        longitRef =  gpsData["GPSLongitudeRef"]
+        
+    if latRef != "N":                     
+        lat = 0 - lat
+    if longitRef != "E":
+        longit = 0 - longit
+        
+    return lat,longit
+
+def decimalCoordinatesToDegress(coord):
+    dec = float(coord[0][0])/float(coord[0][1])
+    minut = float(coord[1][0])/float(coord[1][1])
+    sec = float(coord[2][0])/float(coord[2][1])
+    return dec+(minut/60.0)+(sec/3600.0)
+    
 def savePhotoFromUrl(url,filename):
     f = open( filename, 'wb' )
     data = urllib.urlopen(url).read()
