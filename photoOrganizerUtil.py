@@ -33,6 +33,7 @@ class PhotoFile:
     self.author = None
     self.latitude = None
     self.longitude = None
+    self.copyright = None
 
 class Album:
   def __init__(self):
@@ -112,6 +113,8 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
 def get_exif_data(fname):
     ret = {}
     photoFile = None
+    lat = None
+    longit = None
     try:
         img = Image.open(fname)
         if hasattr( img, '_getexif' ):
@@ -138,6 +141,8 @@ def get_exif_data(fname):
                     photoFile.width=ret['ExifImageWidth']
                 if(ret.has_key('ExifImageHeight')):     
                     photoFile.height=ret['ExifImageHeight'] 
+                if(ret.has_key('Copyright')):     
+                    photoFile.copyright=ret['Copyright']
                     
                 if lat:
                     photoFile.latitude = lat

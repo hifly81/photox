@@ -67,6 +67,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         #show main window
         self.window = self.builder.get_object("PhotoOrganizer")
         self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)
+                      
         self.window.show_all()
         
         #load pref
@@ -80,11 +81,15 @@ class PhotoOrganizerGUI(Gtk.Window):
         photoOrganizerPref = photoOrganizerStorage.loadPref()
         if(photoOrganizerPref!=None):
             try:
+                #load album saved
                 self.hiddenFolders = photoOrganizerPref.hiddenFolders
                 self.entry_folder_text = photoOrganizerPref.lastSearch
-                self.createTwitterPhotoTree(photoOrganizerPref.albumCollection)
+                treeview = self.builder.get_object("treeviewAlbum")
+                self.createFixedPhotoTree(photoOrganizerPref.albumCollection,treeview)
+                #set current tab
+                self.builder.get_object("notebook1").set_current_page(0)
                 leftPanel = self.builder.get_object("leftPanel")
-                leftPanel.add(self.treeview)
+                leftPanel.add(treeview)
                 leftPanel.show_all()
                 self.twitterSearch = False
             #some pref properties stored could be not present --> no previous search available
@@ -111,7 +116,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         if response == Gtk.ResponseType.OK:
             #get directory selected
             self.searchEntry = dialog.get_filename()
-            self.removeSearchResult();
+            self.removeSearchResult(self.builder.get_object("treeviewAlbum"));
             
             # You'll need to import gobject
             GObject.timeout_add(100, self.callScanPhoto)
@@ -122,7 +127,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         keyname = Gdk.keyval_name(event.keyval)
         if keyname == "Return":
             self.twitterSearch = True
-            self.removeSearchResult();    
+            self.removeSearchResult(self.builder.get_object("treeviewTwitter"));    
             queryToSend = self.builder.get_object("twitterSearchField").get_text()
             numberOfTweets = self.builder.get_object("twitterSpin").get_value_as_int()
             try:
@@ -145,10 +150,12 @@ class PhotoOrganizerGUI(Gtk.Window):
                     albumCollection.totalPics = len(album.pics)
             
                     self.twitterCurrentQuery = queryToSend
-                    self.createTwitterPhotoTree(albumCollection)
-            
-                    leftPanel = self.builder.get_object("leftPanel")
-                    leftPanel.add(self.treeview)
+                    treeview = self.builder.get_object("treeviewTwitter")
+                    self.createFixedPhotoTree(albumCollection,treeview)
+                    #set current tab
+                    self.builder.get_object("notebook1").set_current_page(1)
+                    leftPanel = self.builder.get_object("leftPanel1")
+                    leftPanel.add(treeview)
                     leftPanel.show_all()
                 else:
                     self.on_PhotoOrganizer_search_error_event()    
@@ -182,7 +189,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         
     #event selection of a tree entry    
     def on_PhotoOrganizer_tree_entry_selected(self, widget, data = None):
-        selection = self.treeview.get_selection()
+        selection = self.currentTreeview.get_selection()
         if selection is not None:
             tree_model, tree_iter = selection.get_selected()
             imagePath = tree_model.get_value(tree_iter, 0)
@@ -439,17 +446,20 @@ class PhotoOrganizerGUI(Gtk.Window):
         context = statusBar.get_context_id("example")        
         # create the treestore; the model has one column of type string
         treestore = Gtk.TreeStore(str)
-        self.treeview = self.builder.get_object("treeviewAlbum")    
+        treeview = self.builder.get_object("treeviewAlbum")    
         leftPanel = self.builder.get_object("leftPanel")
+        #set current tab
+        self.builder.get_object("notebook1").set_current_page(0)
 
         # call retrieve album list
-        albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,self.treeview,self.imageMap,leftPanel)
+        albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,treeview,self.imageMap,leftPanel)
         self.lastAlbumCollectionScanned = albumCollection 
         self.totalPhotoDictionary = photoDictionary
         #create tree panel
         if len(albumCollection.albums) >0:
             self.imageMap = imageDictionary
-            self.treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
+            self.currentTreeview = treeview
+            treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
             loadWindow.destroy()
             leftPanel.show_all()
         else:
@@ -457,7 +467,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.on_PhotoOrganizer_search_error_event() 
     
     #create the main panel with a tree
-    def createTwitterPhotoTree(self,albumCollection):
+    def createFixedPhotoTree(self,albumCollection,treeview):
         # create the treestore; the model has one column of type string
         treestore = Gtk.TreeStore(str)
         for album in albumCollection.albums:
@@ -467,19 +477,19 @@ class PhotoOrganizerGUI(Gtk.Window):
             for photo in album.pics:
                 subImageMap[photo.fileName] = photo
                 treestore.append(piter, ['%s' %album.title+"/"+photo.fileName])
-            self.imageMap[album.title] = subImageMap    
-        self.treeview = self.builder.get_object("treeviewAlbum")    
-        self.treeview.set_model(treestore)
+            self.imageMap[album.title] = subImageMap        
+        treeview.set_model(treestore)
         albumNameCell = Gtk.CellRendererText()
         #build title tree string
         titleTree = "Album found ("+str(len(albumCollection.albums))+") - Total pics ("+str(albumCollection.totalPics)+")"
         albumNameCol = Gtk.TreeViewColumn(titleTree, albumNameCell, text=0)
-        self.treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
-        self.treeview.insert_column(albumNameCol, 0)
+        self.currentTreeview = treeview
+        treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
+        treeview.insert_column(albumNameCol, 0)
             
-    def removeSearchResult(self):
+    def removeSearchResult(self,treeview):
         try:
-            self.treeview.remove_column(self.treeview.get_column(0))
+            treeview.remove_column(treeview.get_column(0))
         except:
             logger.error("skip remove treeitem")  
 
