@@ -7,7 +7,6 @@ Created on Mar 01, 2013
 import os
 import math
 import urllib2
-import logging
 import logging.config
 import twitterUtil
 import photoOrganizerStorage
@@ -30,6 +29,7 @@ GObject.threads_init()
 #const
 GLADE_CONF = "glade/photoOrganizerGui.glade"
 
+#context menu
 UI_INFO = """
 <ui>
   <popup name='PopupMenu'>
@@ -64,38 +64,22 @@ class PhotoOrganizerGUI(Gtk.Window):
         #handler of GUI signals
         self.builder.connect_signals(handlers)
         
+        #change textview color
+        parse, color = Gdk.Color.parse('#F0F0F0')
+        self.builder.get_object("detailsEntry").modify_bg(Gtk.StateType.NORMAL, color) 
+            
         #show main window
         self.window = self.builder.get_object("PhotoOrganizer")
-        self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)
-                      
+        self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)           
         self.window.show_all()
         
-        #load pref
+        #load pref at startup, including albums saved
         self.loadPreferences()
-        
+    
         #main gtk
         Gtk.main()
-   
-    def loadPreferences(self):
-        #load preferences
-        photoOrganizerPref = photoOrganizerStorage.loadPref()
-        if(photoOrganizerPref!=None):
-            try:
-                #load album saved
-                self.hiddenFolders = photoOrganizerPref.hiddenFolders
-                self.entry_folder_text = photoOrganizerPref.lastSearch
-                treeview = self.builder.get_object("treeviewAlbum")
-                self.createFixedPhotoTree(photoOrganizerPref.albumCollection,treeview)
-                #set current tab
-                self.builder.get_object("notebook1").set_current_page(0)
-                leftPanel = self.builder.get_object("leftPanel")
-                leftPanel.add(treeview)
-                leftPanel.show_all()
-                self.twitterSearch = False
-            #some pref properties stored could be not present --> no previous search available
-            except:
-                pass
-            
+    
+    #event on quit app
     def on_PhotoOrganizer_delete_event  (self, *args):
         if(self.lastAlbumCollectionScanned is not None):
             #save the preferences
@@ -103,6 +87,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         photoOrganizerStorage.savePref(photoFile)
         Gtk.main_quit()
     
+    #event on filesystem search
     def on_PhotoOrganizer_search_event  (self, *args):
         #set no twitter search
         self.twitterSearch = False
@@ -189,6 +174,15 @@ class PhotoOrganizerGUI(Gtk.Window):
         
     #event selection of a tree entry    
     def on_PhotoOrganizer_tree_entry_selected(self, widget, data = None):
+        #take the treeview linked to specific tab
+        currentPage = self.builder.get_object("notebook1").get_current_page()
+        if currentPage == 0:
+            self.currentTreeview = self.builder.get_object("treeviewAlbum")
+            self.twitterSearch = False
+        else:
+           self.currentTreeview = self.builder.get_object("treeviewTwitter") 
+           self.twitterSearch = True
+        
         selection = self.currentTreeview.get_selection()
         if selection is not None:
             tree_model, tree_iter = selection.get_selected()
@@ -349,11 +343,26 @@ class PhotoOrganizerGUI(Gtk.Window):
                         self.imageOpened.show_all()
                         self.builder.get_object("detailsEntry").get_buffer().set_text("user:"+entry.author+"\ndate:"+entry.creationDate+"\ntext:"+entry.text)
                 except:
-                    logger.error("Error in show details..")
+                    pass
         else:
+            self.builder.get_object("detailsEntry").get_buffer().set_text("")
             currentPhoto = self.totalPhotoDictionary[imagePath]
+            gpsText = "\ntaken at:"
+            dateText = "date:"
+            authorText = "\nby:"
+            descText = "\ndescription:"
+            modelText = "\ncamera:"
+            if currentPhoto.date:
+                dateText = dateText+currentPhoto.date
+            if currentPhoto.description:
+                descText = descText+currentPhoto.description
+            if currentPhoto.author:
+                authorText = authorText+currentPhoto.author
+            if currentPhoto.brand:
+                modelText = modelText+str(currentPhoto.brand)+","+str(currentPhoto.model)
             if currentPhoto.latitude:
-                self.builder.get_object("detailsEntry").get_buffer().set_text("photo taken at:\nlatitude:"+str(currentPhoto.latitude)+"\nlongitude:"+str(currentPhoto.longitude))
+                gpsText = gpsText+str(currentPhoto.latitude)+","+str(currentPhoto.longitude)
+            self.builder.get_object("detailsEntry").get_buffer().set_text(dateText+descText+authorText+modelText+gpsText)
     
     #create image viewer panel
     def createImagePanel(self,pimage,imageName):    
@@ -361,7 +370,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         try:
             imagePanel.remove(imagePanel.get_children()[0])
         except:
-            logger.error("skip remove image")
+            pass
         eventBox = Gtk.EventBox()
         eventBox.add(pimage)
         #reference to image selected
@@ -491,7 +500,35 @@ class PhotoOrganizerGUI(Gtk.Window):
         try:
             treeview.remove_column(treeview.get_column(0))
         except:
-            logger.error("skip remove treeitem")  
+            pass  
+    
+    def loadPreferences(self):
+        #load preferences
+        photoOrganizerPref = photoOrganizerStorage.loadPref()
+        if(photoOrganizerPref!=None):
+            try:
+                #load album saved
+                self.hiddenFolders = photoOrganizerPref.hiddenFolders
+                self.entry_folder_text = photoOrganizerPref.lastSearch
+                treeview = self.builder.get_object("treeviewAlbum")
+                self.createFixedPhotoTree(photoOrganizerPref.albumCollection,treeview)
+                #rebuild photo indexes
+                self.totalPhotoDictionary = {}
+                savedAlbums = photoOrganizerPref.albumCollection
+                for album in savedAlbums.albums:
+                    for photo in album.pics:
+                        self.totalPhotoDictionary[album.title+"/"+photo.fileName] = photo
+
+                
+                #set current tab
+                self.builder.get_object("notebook1").set_current_page(0)
+                leftPanel = self.builder.get_object("leftPanel")
+                leftPanel.add(treeview)
+                leftPanel.show_all()
+                self.twitterSearch = False
+            #some pref properties stored could be not present --> no previous search available
+            except:
+                pass
 
 
 def init_GUI():
