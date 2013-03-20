@@ -12,7 +12,8 @@ import twitterUtil
 import photoOrganizerStorage
 import photoOrganizerUtil
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
-from PIL import Image
+from PIL import Image,ImageOps
+import StringIO
 from twitterUtil import TwitterSearchResult
 from photoOrganizerStorage import PhotoOrganizerPref
 from photoOrganizerUtil import AlbumCollection
@@ -36,10 +37,18 @@ UI_INFO = """
     <menuitem action='EditOriginalSize' />
     <menuitem action='EditFlip' />
     <menuitem action='EditRotate' />
+    <menuitem action='EditBordered' />
+    <menuitem action='EditAutocontrast' />
+    <menuitem action='EditDeform' />
     <menuitem action='EditSave' />
   </popup>
 </ui>
 """
+
+class Deformer:
+    def getmesh(self, im):
+        x, y = im.size
+        return [((0, 0, x, y), (0, 0, x, 0, x, y, y, 0))]
 
 class PhotoOrganizerGUI(Gtk.Window):
     
@@ -218,6 +227,65 @@ class PhotoOrganizerGUI(Gtk.Window):
         pixbuf = self.imageOpened.get_pixbuf()
         scaled_buf = pixbuf.flip(30)
         self.imageOpened.set_from_pixbuf(scaled_buf) 
+    
+    def on_PhotoOrganizer_border_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        width,height = pixbuf.get_width(),pixbuf.get_height() 
+        #apply border to the pil image
+        y = ImageOps.expand(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,border=5,fill='red')
+        #must build again the pixbuf from the image
+        if y.mode != 'RGB':         
+            y = y.convert('RGB')
+        buff = StringIO.StringIO()
+        y.save(buff, 'ppm')
+        contents = buff.getvalue()
+        buff.close()
+        loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
+        loader.write(contents)
+        pixbuf = loader.get_pixbuf()
+        loader.close()
+        
+        self.imageOpened.set_from_pixbuf(pixbuf) 
+    
+    def on_PhotoOrganizer_autocontrast_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        width,height = pixbuf.get_width(),pixbuf.get_height() 
+        #apply autocontrast to the pil image
+        y = ImageOps.autocontrast(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,cutoff=0)
+        #must build again the pixbuf from the image
+        if y.mode != 'RGB':         
+            y = y.convert('RGB')
+        buff = StringIO.StringIO()
+        y.save(buff, 'ppm')
+        contents = buff.getvalue()
+        buff.close()
+        loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
+        loader.write(contents)
+        pixbuf = loader.get_pixbuf()
+        loader.close()
+        
+        self.imageOpened.set_from_pixbuf(pixbuf) 
+        
+    def on_PhotoOrganizer_deform_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        width,height = pixbuf.get_width(),pixbuf.get_height() 
+        deformer = Deformer()
+        #apply deform to the pil image
+        y = ImageOps.deform(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,deformer)
+        #must build again the pixbuf from the image
+        if y.mode != 'RGB':         
+            y = y.convert('RGB')
+        buff = StringIO.StringIO()
+        y.save(buff, 'ppm')
+        contents = buff.getvalue()
+        buff.close()
+        loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
+        loader.write(contents)
+        pixbuf = loader.get_pixbuf()
+        loader.close()
+        
+        self.imageOpened.set_from_pixbuf(pixbuf)    
+        
 
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
@@ -289,6 +357,12 @@ class PhotoOrganizerGUI(Gtk.Window):
              self.on_PhotoOrganizer_flip_clicked),
             ("EditRotate", Gtk.STOCK_REFRESH, "Rotate", "<control><alt>R", None,
              self.on_PhotoOrganizer_rotate_clicked),
+            ("EditBordered", Gtk.STOCK_REFRESH, "Border", "<control><alt>B", None,
+             self.on_PhotoOrganizer_border_clicked),
+            ("EditAutocontrast", Gtk.STOCK_REFRESH, "Autocontrast", "<control><alt>A", None,
+             self.on_PhotoOrganizer_autocontrast_clicked),        
+            ("EditDeform", Gtk.STOCK_REFRESH, "Deform", "<control><alt>D", None,
+             self.on_PhotoOrganizer_deform_clicked),                             
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])
