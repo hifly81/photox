@@ -31,6 +31,7 @@ class TwitterSearchResult:
 #twitter entry derived from a search
 class TwitterEntry:
   def __init__(self):
+    #attributes extracted from twitter result
     self.author = None
     self.text = None 
     self.url = None
@@ -40,6 +41,7 @@ def searchMediaTweets(query,numberOfTweets):
     #urlencoding
     queryEncoded = urllib.quote(query)
     try:
+        #search with rpp attribute
         search = urllib.urlopen(TWITTER_SEARCH_QUERY+queryEncoded+"&rpp="+str(numberOfTweets)+"&include_entities=true")
     except Exception as inst:
        x, y = inst.args
