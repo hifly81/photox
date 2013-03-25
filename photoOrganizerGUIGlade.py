@@ -35,11 +35,23 @@ UI_INFO = """
 <ui>
   <popup name='PopupMenu'>
     <menuitem action='EditOriginalSize' />
-    <menuitem action='EditFlip' />
+    <menuitem action='EditMirror' />
     <menuitem action='EditRotate' />
     <menuitem action='EditBordered' />
+    <menuitem action='EditUnbordered' />
     <menuitem action='EditAutocontrast' />
     <menuitem action='EditDeform' />
+    <menuitem action='EditEqualize' />
+    <menuitem action='EditGreyScale' />
+    <menuitem action='EditInvert' />
+    <menuitem action='EditPosterize' />
+    <menuitem action='EditSolarize' />
+    <menuitem action='EditBlur' />
+    <menuitem action='EditContour' />
+    <menuitem action='EditEdge' />
+    <menuitem action='EditEmboss' />
+    <menuitem action='EditSmooth' />
+    <menuitem action='EditSharpen' />
     <menuitem action='EditSave' />
   </popup>
 </ui>
@@ -223,14 +235,13 @@ class PhotoOrganizerGUI(Gtk.Window):
         scaled_buf = pixbuf.rotate_simple(90)
         self.imageOpened.set_from_pixbuf(scaled_buf)
     
-    def on_PhotoOrganizer_flip_clicked(self, widget):
-        pixbuf = self.imageOpened.get_pixbuf()
-        scaled_buf = pixbuf.flip(30)
-        self.imageOpened.set_from_pixbuf(scaled_buf) 
-    
     def on_PhotoOrganizer_border_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_border(pixbuf)) 
+    
+    def on_PhotoOrganizer_unborder_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_unborder(pixbuf)) 
     
     def on_PhotoOrganizer_autocontrast_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()   
@@ -239,6 +250,54 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_deform_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_deformer(pixbuf))    
+    
+    def on_PhotoOrganizer_equalize_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_equalizer(pixbuf))
+    
+    def on_PhotoOrganizer_greyscale_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_greyscale(pixbuf))
+    
+    def on_PhotoOrganizer_invert_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_invert(pixbuf))
+    
+    def on_PhotoOrganizer_mirror_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_mirror(pixbuf))
+    
+    def on_PhotoOrganizer_posterize_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_posterize(pixbuf))
+    
+    def on_PhotoOrganizer_solarize_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_solarize(pixbuf))
+    
+    def on_PhotoOrganizer_blur_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_blur(pixbuf))
+    
+    def on_PhotoOrganizer_contour_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_contour(pixbuf))
+    
+    def on_PhotoOrganizer_edge_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_edge(pixbuf))
+    
+    def on_PhotoOrganizer_emboss_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_emboss(pixbuf))
+    
+    def on_PhotoOrganizer_smooth_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_smooth(pixbuf))
+    
+    def on_PhotoOrganizer_sharpen_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_sharpen(pixbuf))
         
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
@@ -310,16 +369,40 @@ class PhotoOrganizerGUI(Gtk.Window):
         action_group.add_actions([                   
             ("EditOriginalSize", Gtk.STOCK_ZOOM_FIT, "Original size", "<control><alt>O", None,
              self.on_PhotoOrganizer_original_size_clicked),
-            ("EditFlip", Gtk.STOCK_OK, "Flip", "<control><alt>P", None,
-             self.on_PhotoOrganizer_flip_clicked),
+            ("EditMirror", Gtk.STOCK_OK, "Mirror", "<control><alt>M", None,
+             self.on_PhotoOrganizer_mirror_clicked),
             ("EditRotate", Gtk.STOCK_REFRESH, "Rotate", "<control><alt>R", None,
              self.on_PhotoOrganizer_rotate_clicked),
             ("EditBordered", Gtk.STOCK_REFRESH, "Border", "<control><alt>B", None,
              self.on_PhotoOrganizer_border_clicked),
+            ("EditUnbordered", Gtk.STOCK_REFRESH, "Unborder", "<control><alt>U", None,
+             self.on_PhotoOrganizer_unborder_clicked),                      
             ("EditAutocontrast", Gtk.STOCK_REFRESH, "Autocontrast", "<control><alt>A", None,
              self.on_PhotoOrganizer_autocontrast_clicked),        
             ("EditDeform", Gtk.STOCK_REFRESH, "Deform", "<control><alt>D", None,
-             self.on_PhotoOrganizer_deform_clicked),                             
+             self.on_PhotoOrganizer_deform_clicked),    
+            ("EditEqualize", Gtk.STOCK_REFRESH, "Equalize", "<control><alt>E", None,
+             self.on_PhotoOrganizer_equalize_clicked),      
+            ("EditGreyScale", Gtk.STOCK_REFRESH, "GreyScale", "<control><alt>G", None,
+             self.on_PhotoOrganizer_greyscale_clicked), 
+            ("EditInvert", Gtk.STOCK_OK, "Invert", "<control><alt>I", None,
+             self.on_PhotoOrganizer_invert_clicked), 
+            ("EditPosterize", Gtk.STOCK_OK, "Posterize", "<control><alt>P", None,
+             self.on_PhotoOrganizer_posterize_clicked),  
+            ("EditSolarize", Gtk.STOCK_OK, "Solarize", "<control><alt>Z", None,
+             self.on_PhotoOrganizer_solarize_clicked),         
+            ("EditBlur", Gtk.STOCK_OK, "Blur", "<control><alt>K", None,
+             self.on_PhotoOrganizer_blur_clicked),
+            ("EditContour", Gtk.STOCK_OK, "Contour", "<control><alt>W", None,
+             self.on_PhotoOrganizer_contour_clicked),   
+            ("EditEdge", Gtk.STOCK_OK, "Edge", "<control><alt>E", None,
+             self.on_PhotoOrganizer_edge_clicked),
+            ("EditEmboss", Gtk.STOCK_OK, "Emboss", "<control><alt>B", None,
+             self.on_PhotoOrganizer_emboss_clicked),     
+            ("EditSmooth", Gtk.STOCK_OK, "Smooth", "<control><alt>T", None,
+             self.on_PhotoOrganizer_smooth_clicked), 
+            ("EditSharpen", Gtk.STOCK_OK, "Sharpen", "<control><alt>H", None,
+             self.on_PhotoOrganizer_sharpen_clicked),      
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])
