@@ -6,7 +6,7 @@ Created on Mar 21, 2013
 
 import StringIO
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
-from PIL import Image,ImageOps,ImageFilter
+from PIL import Image,ImageOps,ImageFilter,ImageEnhance
 
 class BasicDeformer:
     def getmesh(self, im):
@@ -15,286 +15,130 @@ class BasicDeformer:
 
 def apply_border(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply border to the pil image
     y = ImageOps.expand(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,border=5,fill='red')
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_unborder(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply border to the pil image
     y = ImageOps.crop(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ),1)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_autocontrast(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = ImageOps.autocontrast(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,cutoff=0)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_deformer(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     deformer = BasicDeformer()
-    #apply deform to the pil image
     y = ImageOps.deform(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,deformer)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_equalizer(pixbuf):    
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = ImageOps.equalize(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_greyscale(pixbuf):    
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     y = y.convert('L')
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_invert(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = ImageOps.invert(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_mirror(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = ImageOps.mirror(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_posterize(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = ImageOps.posterize(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ),4)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_solarize(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = ImageOps.solarize(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_blur(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.BLUR)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_contour(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.CONTOUR)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_edge(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.FIND_EDGES)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_emboss(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.EMBOSS)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_smooth(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.SMOOTH)
-    #must build again the pixbuf from the image
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
-    buff = StringIO.StringIO()
-    y.save(buff, 'ppm')
-    contents = buff.getvalue()
-    buff.close()
-    loader = GdkPixbuf.PixbufLoader.new_with_type('pnm')
-    loader.write(contents)
-    pixbuf = loader.get_pixbuf()
-    loader.close()
-    
-    return pixbuf
+    return fromImageToPixbuf(y)
 
 def apply_sharpen(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    #apply autocontrast to the pil image
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.SHARPEN)
-    #must build again the pixbuf from the image
+    return fromImageToPixbuf(y)
+
+'''
+Effect based on a range of values --> brightness,contrast
+'''
+
+def apply_brightness(pixbuf,brightness=3.0):
+    #0.0 black - 1.0 leaves image unchanged
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    enhancer = ImageEnhance.Brightness(y)
+    y = enhancer.enhance(brightness)
+    return fromImageToPixbuf(y)
+
+def apply_contrast(pixbuf,contrast=1.3):
+    #0.0 solid grey image - 1.0 leaves image unchanged
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    enhancer = ImageEnhance.Contrast(y)
+    y = enhancer.enhance(contrast)
+    return fromImageToPixbuf(y)
+
+def apply_sharpness(pixbuf,sharpness=2.0):
+    #0.0 blurred image - 1.0 leaves image unchanged - 2.0 sharpened image
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    enhancer = ImageEnhance.Sharpness(y)
+    y = enhancer.enhance(sharpness)
+    return fromImageToPixbuf(y)
+
+def apply_color(pixbuf,color=1.5):
+    #0.0 black & white image - 1.0 leaves image unchanged -
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    enhancer = ImageEnhance.Color(y)
+    y = enhancer.enhance(color)
+    return fromImageToPixbuf(y)
+
+    
+def fromImageToPixbuf(y):
     if y.mode != 'RGB':         
         y = y.convert('RGB')
     buff = StringIO.StringIO()
@@ -305,5 +149,4 @@ def apply_sharpen(pixbuf):
     loader.write(contents)
     pixbuf = loader.get_pixbuf()
     loader.close()
-    
     return pixbuf

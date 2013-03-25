@@ -52,6 +52,10 @@ UI_INFO = """
     <menuitem action='EditEmboss' />
     <menuitem action='EditSmooth' />
     <menuitem action='EditSharpen' />
+    <menuitem action='EditBrigthness' />
+    <menuitem action='EditContrast' />
+    <menuitem action='EditSharpness' />
+    <menuitem action='EditColor' />
     <menuitem action='EditSave' />
   </popup>
 </ui>
@@ -299,6 +303,22 @@ class PhotoOrganizerGUI(Gtk.Window):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_sharpen(pixbuf))
         
+    def on_PhotoOrganizer_brightness_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_brightness(pixbuf)) 
+    
+    def on_PhotoOrganizer_contrast_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_contrast(pixbuf)) 
+    
+    def on_PhotoOrganizer_sharpness_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_sharpness(pixbuf))   
+    
+    def on_PhotoOrganizer_color_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_color(pixbuf))  
+        
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
         dialog.set_default_size(800, 400)
@@ -402,7 +422,15 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditSmooth", Gtk.STOCK_OK, "Smooth", "<control><alt>T", None,
              self.on_PhotoOrganizer_smooth_clicked), 
             ("EditSharpen", Gtk.STOCK_OK, "Sharpen", "<control><alt>H", None,
-             self.on_PhotoOrganizer_sharpen_clicked),      
+             self.on_PhotoOrganizer_sharpen_clicked), 
+            ("EditColor", Gtk.STOCK_OK, "Color", "<control><alt>Y", None,
+             self.on_PhotoOrganizer_color_clicked), 
+            ("EditBrigthness", Gtk.STOCK_OK, "Brigthness", "<control><alt>B", None,
+             self.on_PhotoOrganizer_brightness_clicked),
+            ("EditContrast", Gtk.STOCK_OK, "Contrast", "<control><alt>L", None,
+             self.on_PhotoOrganizer_contrast_clicked),  
+            ("EditSharpness", Gtk.STOCK_OK, "Sharpness", "<control><alt>G", None,
+             self.on_PhotoOrganizer_sharpness_clicked),      
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])
