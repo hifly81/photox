@@ -191,3 +191,5 @@ def savePhotoFromUrl(url,filename):
     f.write( data )
     f.close()
 
+def savePhotoFromPixbuf(pixbuf,type,quality,filename):
+    pixbuf.savev(filename, type, [],[])

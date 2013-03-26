@@ -325,6 +325,23 @@ class PhotoOrganizerGUI(Gtk.Window):
      
         Gtk.FileChooser.set_do_overwrite_confirmation(dialog, True)
         Gtk.FileChooser.set_current_name(dialog, "Untitled document")
+        
+        filter = Gtk.FileFilter()
+        filter.set_name("All files")
+        filter.add_pattern("*")
+        dialog.add_filter(filter)
+   
+        filter = Gtk.FileFilter()
+        filter.set_name("Images")
+        filter.add_mime_type("image/png")
+        filter.add_mime_type("image/jpeg")
+        filter.add_mime_type("image/gif")
+        filter.add_pattern("*.png")
+        filter.add_pattern("*.jpg")
+        filter.add_pattern("*.gif")
+        filter.add_pattern("*.tif")
+        filter.add_pattern("*.xpm")
+        dialog.add_filter(filter)
 
         response = dialog.run()
         
@@ -333,7 +350,10 @@ class PhotoOrganizerGUI(Gtk.Window):
             dialog.destroy()
             while Gtk.events_pending():
                 Gtk.main_iteration_do(False)
-            photoOrganizerUtil.savePhotoFromUrl(self.lastTwitterImageUrl,filename)
+            if(self.twitterSearch):
+                photoOrganizerUtil.savePhotoFromUrl(self.lastTwitterImageUrl,filename)
+            else:
+                photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(),"jpeg",100,filename);
            
     def on_PhotoOrganizer_image_keypress_event(self,widget,event) :
         newImagePath = None
