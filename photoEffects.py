@@ -13,16 +13,6 @@ class BasicDeformer:
         x, y = im.size
         return [((0, 0, x, y), (0, 0, x, 0, x, y, y, 0))]
 
-def apply_border(pixbuf):
-    width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.expand(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,border=5,fill='red')
-    return fromImageToPixbuf(y)
-
-def apply_unborder(pixbuf):
-    width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.crop(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ),1)
-    return fromImageToPixbuf(y)
-
 def apply_autocontrast(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     y = ImageOps.autocontrast(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,cutoff=0)
@@ -45,6 +35,19 @@ def apply_greyscale(pixbuf):
     y = y.convert('L')
     return fromImageToPixbuf(y)
 
+def apply_sepia(pixbuf):    
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = y.convert('L')
+    y = ImageOps.autocontrast(y)
+    sepia = []
+    r,g,b = (255, 240, 192)
+    for i in range(255):
+        sepia.extend((r*i/255, g*i/255, b*i/255))
+    y.putpalette(sepia)
+    y = y.convert("RGB")
+    return fromImageToPixbuf(y)
+
 def apply_invert(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     y = ImageOps.invert(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
@@ -53,11 +56,6 @@ def apply_invert(pixbuf):
 def apply_mirror(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     y = ImageOps.mirror(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
-    return fromImageToPixbuf(y)
-
-def apply_posterize(pixbuf):
-    width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.posterize(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ),4)
     return fromImageToPixbuf(y)
 
 def apply_solarize(pixbuf):
@@ -101,9 +99,50 @@ def apply_sharpen(pixbuf):
     y = y.filter(ImageFilter.SHARPEN)
     return fromImageToPixbuf(y)
 
+def apply_polaroid(pixbuf,imageText):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    frameSize = (300,320)  
+    imageOutputSize = (270,245) 
+    imgModified = Image.open('images/frame.jpg')
+    #cropped image to the requested framesize
+    imgModified = ImageOps.fit(imgModified, frameSize, Image.ANTIALIAS, 0, (0.5,0.5))
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels()) 
+    #cropped image to the requested size
+    y = ImageOps.fit(y, imageOutputSize, Image.ANTIALIAS, 0, (0.5,0.5))
+    y = ImageOps.autocontrast(y, cutoff=2)
+    y = ImageEnhance.Sharpness(y).enhance(2.0)
+    
+    boxOnImage = (12,18) 
+    imgModified.paste(y, boxOnImage)
+    
+    #text on image
+    textWidget = ImageDraw.Draw(imgModified).textsize(imageText)
+    fontxy = (frameSize[0]/2 - textWidget[0]/2, 278)
+    ImageDraw.Draw(imgModified).text(fontxy, imageText,fill=(40,40,40))
+    
+    imgOutput = Image.new(imgModified.mode, (300,320))
+    imgOutput.paste(imgModified, (imgOutput.size[0]/2-imgModified.size[0]/2, imgOutput.size[1]/2-imgModified.size[1]/2))
+ 
+    return fromImageToPixbuf(imgOutput)
+
 '''
 Effect based on a range of values --> brightness,contrast
 '''
+
+def apply_border(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = ImageOps.expand(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,border=5,fill='red')
+    return fromImageToPixbuf(y)
+
+def apply_unborder(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = ImageOps.crop(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ),1)
+    return fromImageToPixbuf(y)
+
+def apply_posterize(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = ImageOps.posterize(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ),4)
+    return fromImageToPixbuf(y)
 
 def apply_brightness(pixbuf,brightness=3.0):
     #0.0 black - 1.0 leaves image unchanged
@@ -136,33 +175,6 @@ def apply_color(pixbuf,color=1.5):
     enhancer = ImageEnhance.Color(y)
     y = enhancer.enhance(color)
     return fromImageToPixbuf(y)
-
-def apply_polaroid(pixbuf,imageText):
-    width,height = pixbuf.get_width(),pixbuf.get_height() 
-    frameSize = (300,320)  
-    imageOutputSize = (270,245) 
-    imgModified = Image.open('images/frame.jpg')
-    #cropped image to the requested framesize
-    imgModified = ImageOps.fit(imgModified, frameSize, Image.ANTIALIAS, 0, (0.5,0.5))
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels()) 
-    #cropped image to the requested size
-    y = ImageOps.fit(y, imageOutputSize, Image.ANTIALIAS, 0, (0.5,0.5))
-    y = ImageOps.autocontrast(y, cutoff=2)
-    y = ImageEnhance.Sharpness(y).enhance(2.0)
-    
-    boxOnImage = (12,18) 
-    imgModified.paste(y, boxOnImage)
-    
-    #text on image
-    textWidget = ImageDraw.Draw(imgModified).textsize(imageText)
-    fontxy = (frameSize[0]/2 - textWidget[0]/2, 278)
-    ImageDraw.Draw(imgModified).text(fontxy, imageText,fill=(40,40,40))
-    
-    imgOutput = Image.new(imgModified.mode, (300,320))
-    imgOutput.paste(imgModified, (imgOutput.size[0]/2-imgModified.size[0]/2, imgOutput.size[1]/2-imgModified.size[1]/2))
- 
-    return fromImageToPixbuf(imgOutput)
-
     
 def fromImageToPixbuf(y):
     if y.mode != 'RGB':         

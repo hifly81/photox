@@ -13,8 +13,6 @@ import photoOrganizerStorage
 import photoOrganizerUtil
 import photoEffects
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
-from PIL import Image
-from twitterUtil import TwitterSearchResult
 from photoOrganizerStorage import PhotoOrganizerPref
 from photoOrganizerUtil import AlbumCollection
 from photoOrganizerUtil import Album
@@ -57,6 +55,7 @@ UI_INFO = """
     <menuitem action='EditSharpness' />
     <menuitem action='EditColor' />
     <menuitem action='EditPolaroid' />
+    <menuitem action='EditSepia' />
     <menuitem action='EditSave' />
   </popup>
 </ui>
@@ -103,6 +102,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_sharpness_clicked": self.on_PhotoOrganizer_sharpness_clicked,
                     "on_PhotoOrganizer_color_clicked":self.on_PhotoOrganizer_color_clicked,
                     "on_PhotoOrganizer_polaroid_clicked":self.on_PhotoOrganizer_polaroid_clicked,
+                    "on_PhotoOrganizer_sepia_clicked":self.on_PhotoOrganizer_sepia_clicked,
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
         }
         #handler of GUI signals
@@ -346,6 +346,10 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_polaroid_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_polaroid(pixbuf,'Text default'))
+    
+    def on_PhotoOrganizer_sepia_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_sepia(pixbuf))
         
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
@@ -480,7 +484,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditSharpness", Gtk.STOCK_OK, "Sharpness", "<control><alt>G", None,
              self.on_PhotoOrganizer_sharpness_clicked), 
             ("EditPolaroid", Gtk.STOCK_OK, "Polaroid", "<control><alt>P", None,
-             self.on_PhotoOrganizer_polaroid_clicked),                         
+             self.on_PhotoOrganizer_polaroid_clicked),  
+            ("EditSepia", Gtk.STOCK_OK, "Sepia", "<control><alt>J", None,
+             self.on_PhotoOrganizer_sepia_clicked),                       
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])
