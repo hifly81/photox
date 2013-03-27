@@ -56,6 +56,7 @@ UI_INFO = """
     <menuitem action='EditContrast' />
     <menuitem action='EditSharpness' />
     <menuitem action='EditColor' />
+    <menuitem action='EditPolaroid' />
     <menuitem action='EditSave' />
   </popup>
 </ui>
@@ -101,6 +102,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_contrast_clicked": self.on_PhotoOrganizer_contrast_clicked,
                     "on_PhotoOrganizer_sharpness_clicked": self.on_PhotoOrganizer_sharpness_clicked,
                     "on_PhotoOrganizer_color_clicked":self.on_PhotoOrganizer_color_clicked,
+                    "on_PhotoOrganizer_polaroid_clicked":self.on_PhotoOrganizer_polaroid_clicked,
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
         }
         #handler of GUI signals
@@ -341,6 +343,10 @@ class PhotoOrganizerGUI(Gtk.Window):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_color(pixbuf))  
         
+    def on_PhotoOrganizer_polaroid_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_polaroid(pixbuf,'Text default'))
+        
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
         dialog.set_default_size(800, 400)
@@ -472,7 +478,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditContrast", Gtk.STOCK_OK, "Contrast", "<control><alt>L", None,
              self.on_PhotoOrganizer_contrast_clicked),  
             ("EditSharpness", Gtk.STOCK_OK, "Sharpness", "<control><alt>G", None,
-             self.on_PhotoOrganizer_sharpness_clicked),      
+             self.on_PhotoOrganizer_sharpness_clicked), 
+            ("EditPolaroid", Gtk.STOCK_OK, "Polaroid", "<control><alt>P", None,
+             self.on_PhotoOrganizer_polaroid_clicked),                         
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])

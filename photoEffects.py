@@ -6,7 +6,7 @@ Created on Mar 21, 2013
 
 import StringIO
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
-from PIL import Image,ImageOps,ImageFilter,ImageEnhance
+from PIL import Image,ImageOps,ImageFilter,ImageEnhance,ImageDraw
 
 class BasicDeformer:
     def getmesh(self, im):
@@ -136,6 +136,32 @@ def apply_color(pixbuf,color=1.5):
     enhancer = ImageEnhance.Color(y)
     y = enhancer.enhance(color)
     return fromImageToPixbuf(y)
+
+def apply_polaroid(pixbuf,imageText):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    frameSize = (300,320)  
+    imageOutputSize = (270,245) 
+    imgModified = Image.open('images/frame.jpg')
+    #cropped image to the requested framesize
+    imgModified = ImageOps.fit(imgModified, frameSize, Image.ANTIALIAS, 0, (0.5,0.5))
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels()) 
+    #cropped image to the requested size
+    y = ImageOps.fit(y, imageOutputSize, Image.ANTIALIAS, 0, (0.5,0.5))
+    y = ImageOps.autocontrast(y, cutoff=2)
+    y = ImageEnhance.Sharpness(y).enhance(2.0)
+    
+    boxOnImage = (12,18) 
+    imgModified.paste(y, boxOnImage)
+    
+    #text on image
+    textWidget = ImageDraw.Draw(imgModified).textsize(imageText)
+    fontxy = (frameSize[0]/2 - textWidget[0]/2, 278)
+    ImageDraw.Draw(imgModified).text(fontxy, imageText,fill=(40,40,40))
+    
+    imgOutput = Image.new(imgModified.mode, (300,320))
+    imgOutput.paste(imgModified, (imgOutput.size[0]/2-imgModified.size[0]/2, imgOutput.size[1]/2-imgModified.size[1]/2))
+ 
+    return fromImageToPixbuf(imgOutput)
 
     
 def fromImageToPixbuf(y):
