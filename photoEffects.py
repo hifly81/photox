@@ -6,7 +6,7 @@ Created on Mar 21, 2013
 
 import StringIO
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
-from PIL import Image,ImageOps,ImageFilter,ImageEnhance,ImageDraw
+from PIL import Image,ImageOps,ImageFilter,ImageEnhance,ImageDraw,ImageFont
 
 class BasicDeformer:
     def getmesh(self, im):
@@ -42,8 +42,8 @@ def apply_sepia(pixbuf):
     y = ImageOps.autocontrast(y)
     sepia = []
     r,g,b = (255, 240, 192)
-    for i in range(255):
-        sepia.extend((r*i/255, g*i/255, b*i/255))
+    for value in range(255):
+        sepia.extend((r*value/255, g*value/255, b*value/255))
     y.putpalette(sepia)
     y = y.convert("RGB")
     return fromImageToPixbuf(y)
@@ -97,6 +97,34 @@ def apply_sharpen(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.SHARPEN)
+    return fromImageToPixbuf(y)
+
+def apply_darkViolet(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    r,g,b = y.split()
+    y = Image.merge('RGB',(r,r,b))
+    return fromImageToPixbuf(y)
+
+def apply_lightGreen(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    r,g,b = y.split()
+    y = Image.merge('RGB',(g,b,g))
+    return fromImageToPixbuf(y)
+
+def apply_white(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    r,g,b = y.split()
+    y = Image.merge('RGB',(b,b,r))
+    return fromImageToPixbuf(y)
+
+def apply_green(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    r,g,b = y.split()
+    y = Image.merge('RGB',(b,g,g))
     return fromImageToPixbuf(y)
 
 def apply_polaroid(pixbuf,imageText):
@@ -175,7 +203,75 @@ def apply_color(pixbuf,color=1.5):
     enhancer = ImageEnhance.Color(y)
     y = enhancer.enhance(color)
     return fromImageToPixbuf(y)
+
+def apply_watermarkSignature(pixbuf,textSignature="text",inputFont="/usr/share/fonts/gnu-free/FreeMono.ttf",rotation=25, opacity=0.25):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    textImage = Image.new('RGBA', y.size, (0,0,0,0))
+    fontSize = 2
+    fontImage = ImageFont.truetype(inputFont, fontSize)
+    fontWidth, fontHeight = fontImage.getsize(textSignature)
+    while (fontWidth+fontHeight < textImage.size[0]):
+        fontSize += 2
+        fontImage = ImageFont.truetype(inputFont, fontSize)
+        fontWidth, fontHeight = fontImage.getsize(textSignature)
+    textDraw = ImageDraw.Draw(textImage, 'RGBA')
+    textDraw.text(((textImage.size[0] - fontWidth) / 2,
+              (textImage.size[1] - fontHeight) / 2),
+              textSignature, font=fontImage)
+    textImage = textImage.rotate(rotation,Image.BICUBIC)
+    splittedImage = textImage.split()[3]
+    splittedImage = ImageEnhance.Brightness(splittedImage).enhance(opacity)
+    textImage.putalpha(splittedImage)
+    return fromImageToPixbuf(Image.composite(textImage, y, textImage))
+
+def scaleImageFromPixbuf(pixbuf):
+    orig_width =  pixbuf.get_width()
+    orig_height = pixbuf.get_height()
+    if orig_width >= orig_height:
+        if orig_width > 700:
+            orig_width = 700
+        if orig_height > 600:
+            orig_height = 600  
+    if orig_width < orig_height:
+        if orig_width > 600:
+            orig_width = 600
+        if orig_height > 700:
+            orig_height = 700
+    scaled_buf = pixbuf.scale_simple(orig_width,orig_height,GdkPixbuf.InterpType.BILINEAR)
+    return scaled_buf
+
+def createImageHistogram(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    histogram = y.histogram()
+    #create new image with histogram
+    histogramImage = Image.new("RGBA", (300, 200))   
+    histogramLineImage = ImageDraw.Draw(histogramImage)
     
+    #draw histogram lines  
+    red = (255,0,0)              
+    green = (0,255,0)             
+    blue = (0,0,255) 
+    xAxis=0 
+    yAxis=0
+    scalingFactor = float((200)*1.5)/max(histogram)
+    for value in histogram:
+        if (value > 0):
+            rgb = red
+            if (yAxis > 255): 
+                rgb = green
+            if (yAxis > 511): 
+                rgb = blue
+            histogramLineImage.line((xAxis, 200, xAxis, 200-(value*scalingFactor)), fill=rgb)        
+            if (xAxis > 255): 
+                xAxis=0
+            else: 
+                xAxis+=1
+            yAxis+=1
+    
+    return fromImageToPixbuf(histogramImage)
+
 def fromImageToPixbuf(y):
     if y.mode != 'RGB':         
         y = y.convert('RGB')

@@ -35,6 +35,7 @@ UI_INFO = """
     <menuitem action='EditOriginalSize' />
     <menuitem action='EditMirror' />
     <menuitem action='EditRotate' />
+    <menuitem action='EditRotateRight' />
     <menuitem action='EditBordered' />
     <menuitem action='EditUnbordered' />
     <menuitem action='EditAutocontrast' />
@@ -56,6 +57,12 @@ UI_INFO = """
     <menuitem action='EditColor' />
     <menuitem action='EditPolaroid' />
     <menuitem action='EditSepia' />
+    <menuitem action='EditDarkViolet' />
+    <menuitem action='EditLightGreen' />
+    <menuitem action='EditWhite' />
+    <menuitem action='EditGreen' />
+    <menuitem action='EditWatermark' /> 
+    <menuitem action='EditHistogram' /> 
     <menuitem action='EditSave' />
   </popup>
 </ui>
@@ -71,6 +78,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.twitterCurrentQuery = None
         self.currenWinImage = None
         self.entry_folder_text = None
+        self.lastAlbumCollectionScanned = None
         
         #build GUI from glade
         self.builder = Gtk.Builder()
@@ -82,6 +90,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_original_size_clicked":self.on_PhotoOrganizer_original_size_clicked,
                     "on_PhotoOrganizer_mirror_clicked": self.on_PhotoOrganizer_mirror_clicked,
                     "on_PhotoOrganizer_rotate_clicked": self.on_PhotoOrganizer_rotate_clicked,
+                    "on_PhotoOrganizer_rotate_right_clicked":self.on_PhotoOrganizer_rotate_right_clicked,
                     "on_PhotoOrganizer_border_clicked": self.on_PhotoOrganizer_border_clicked,
                     "on_PhotoOrganizer_unborder_clicked":self.on_PhotoOrganizer_unborder_clicked,
                     "on_PhotoOrganizer_autocontrast_clicked": self.on_PhotoOrganizer_autocontrast_clicked,
@@ -103,6 +112,12 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_color_clicked":self.on_PhotoOrganizer_color_clicked,
                     "on_PhotoOrganizer_polaroid_clicked":self.on_PhotoOrganizer_polaroid_clicked,
                     "on_PhotoOrganizer_sepia_clicked":self.on_PhotoOrganizer_sepia_clicked,
+                    "on_PhotoOrganizer_darkViolet_clicked":self.on_PhotoOrganizer_darkViolet_clicked,
+                    "on_PhotoOrganizer_lightGreen_clicked":self.on_PhotoOrganizer_lightGreen_clicked,
+                    "on_PhotoOrganizer_white_clicked":self.on_PhotoOrganizer_white_clicked,
+                    "on_PhotoOrganizer_green_clicked":self.on_PhotoOrganizer_green_clicked,
+                    "on_PhotoOrganizer_watermark_clicked":self.on_PhotoOrganizer_watermark_clicked,
+                    "on_PhotoOrganizer_histogram_clicked":self.on_PhotoOrganizer_histogram_clicked,
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
         }
         #handler of GUI signals
@@ -123,6 +138,81 @@ class PhotoOrganizerGUI(Gtk.Window):
         #main gtk
         Gtk.main()
     
+    def create_image_context_menu(self):
+        action_group = Gtk.ActionGroup("my_actions")
+        action_group.add_actions([                   
+            ("EditOriginalSize", Gtk.STOCK_ZOOM_FIT, "Original size", "<control><alt>O", None,
+             self.on_PhotoOrganizer_original_size_clicked),
+            ("EditMirror", Gtk.STOCK_OK, "Mirror", "<control><alt>M", None,
+             self.on_PhotoOrganizer_mirror_clicked),
+            ("EditRotate", Gtk.STOCK_REFRESH, "Rotate left", "<control><alt>R", None,
+             self.on_PhotoOrganizer_rotate_clicked),
+            ("EditRotateRight", Gtk.STOCK_REFRESH, "Rotate right", "<control><alt>Q", None,
+             self.on_PhotoOrganizer_rotate_right_clicked),
+            ("EditBordered", Gtk.STOCK_REFRESH, "Border", "<control><alt>B", None,
+             self.on_PhotoOrganizer_border_clicked),
+            ("EditUnbordered", Gtk.STOCK_REFRESH, "Unborder", "<control><alt>U", None,
+             self.on_PhotoOrganizer_unborder_clicked),                      
+            ("EditAutocontrast", Gtk.STOCK_REFRESH, "Autocontrast", "<control><alt>A", None,
+             self.on_PhotoOrganizer_autocontrast_clicked),        
+            ("EditDeform", Gtk.STOCK_REFRESH, "Deform", "<control><alt>D", None,
+             self.on_PhotoOrganizer_deform_clicked),    
+            ("EditEqualize", Gtk.STOCK_REFRESH, "Equalize", "<control><alt>E", None,
+             self.on_PhotoOrganizer_equalize_clicked),      
+            ("EditGreyScale", Gtk.STOCK_REFRESH, "GreyScale", "<control><alt>G", None,
+             self.on_PhotoOrganizer_greyscale_clicked), 
+            ("EditInvert", Gtk.STOCK_OK, "Invert", "<control><alt>I", None,
+             self.on_PhotoOrganizer_invert_clicked), 
+            ("EditPosterize", Gtk.STOCK_OK, "Posterize", "<control><alt>P", None,
+             self.on_PhotoOrganizer_posterize_clicked),  
+            ("EditSolarize", Gtk.STOCK_OK, "Solarize", "<control><alt>Z", None,
+             self.on_PhotoOrganizer_solarize_clicked),         
+            ("EditBlur", Gtk.STOCK_OK, "Blur", "<control><alt>K", None,
+             self.on_PhotoOrganizer_blur_clicked),
+            ("EditContour", Gtk.STOCK_OK, "Contour", "<control><alt>W", None,
+             self.on_PhotoOrganizer_contour_clicked),   
+            ("EditEdge", Gtk.STOCK_OK, "Edge", "<control><alt>E", None,
+             self.on_PhotoOrganizer_edge_clicked),
+            ("EditEmboss", Gtk.STOCK_OK, "Emboss", "<control><alt>B", None,
+             self.on_PhotoOrganizer_emboss_clicked),     
+            ("EditSmooth", Gtk.STOCK_OK, "Smooth", "<control><alt>T", None,
+             self.on_PhotoOrganizer_smooth_clicked), 
+            ("EditSharpen", Gtk.STOCK_OK, "Sharpen", "<control><alt>H", None,
+             self.on_PhotoOrganizer_sharpen_clicked), 
+            ("EditColor", Gtk.STOCK_OK, "Color", "<control><alt>Y", None,
+             self.on_PhotoOrganizer_color_clicked), 
+            ("EditBrigthness", Gtk.STOCK_OK, "Brigthness", "<control><alt>B", None,
+             self.on_PhotoOrganizer_brightness_clicked),
+            ("EditContrast", Gtk.STOCK_OK, "Contrast", "<control><alt>L", None,
+             self.on_PhotoOrganizer_contrast_clicked),  
+            ("EditSharpness", Gtk.STOCK_OK, "Sharpness", "<control><alt>G", None,
+             self.on_PhotoOrganizer_sharpness_clicked), 
+            ("EditPolaroid", Gtk.STOCK_OK, "Polaroid", "<control><alt>P", None,
+             self.on_PhotoOrganizer_polaroid_clicked),  
+            ("EditSepia", Gtk.STOCK_OK, "Sepia", "<control><alt>J", None,
+             self.on_PhotoOrganizer_sepia_clicked),  
+            ("EditDarkViolet", Gtk.STOCK_OK, "Dark Violet", "<control><alt>V", None,
+             self.on_PhotoOrganizer_darkViolet_clicked), 
+            ("EditLightGreen", Gtk.STOCK_OK, "Light Green", "<control><alt>X", None,
+             self.on_PhotoOrganizer_lightGreen_clicked), 
+            ("EditWhite", Gtk.STOCK_OK, "White", "<control><alt>E", None,
+             self.on_PhotoOrganizer_white_clicked), 
+            ("EditGreen", Gtk.STOCK_OK, "Green", "<control><alt>J", None,
+             self.on_PhotoOrganizer_green_clicked), 
+            ("EditWatermark", Gtk.STOCK_OK, "Watermark", "<control><alt>Z", None,
+             self.on_PhotoOrganizer_watermark_clicked),                                        
+            ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
+             self.on_PhotoOrganizer_save_clicked)                                             
+        ])
+        uimanager = Gtk.UIManager()
+        # Throws exception if something went wrong
+        uimanager.add_ui_from_string(UI_INFO)
+        # Add the accelerator group to the toplevel window
+        accelgroup = uimanager.get_accel_group()
+        self.add_accel_group(accelgroup)
+        uimanager.insert_action_group(action_group)
+        return uimanager
+    
     
     '''
         SECTION FOR EVENTS
@@ -133,7 +223,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         if(self.lastAlbumCollectionScanned is not None):
             #save the preferences
             photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text,self.lastAlbumCollectionScanned)
-        photoOrganizerStorage.savePref(photoFile)
+            photoOrganizerStorage.savePref(photoFile)
         Gtk.main_quit()
     
     #event on filesystem search
@@ -235,18 +325,19 @@ class PhotoOrganizerGUI(Gtk.Window):
         selection = self.currentTreeview.get_selection()
         if selection is not None:
             tree_model, tree_iter = selection.get_selected()
-            imagePath = tree_model.get_value(tree_iter, 0)
+            if (tree_model is not None):
+                imagePath = tree_model.get_value(tree_iter, 0)
         
-            if(self.twitterSearch):
-                if(imagePath == self.twitterCurrentQuery):
-                    self.createThubnailPanel(imagePath)
+                if(self.twitterSearch):
+                    if(imagePath == self.twitterCurrentQuery):
+                        self.createThubnailPanel(imagePath)
+                    else:
+                        self.createScaledImage(imagePath)
                 else:
-                    self.createScaledImage(imagePath)
-            else:
-                if os.path.isfile(imagePath):
-                    self.createScaledImage(imagePath)
-                else:
-                    self.createThubnailPanel(imagePath) 
+                    if os.path.isfile(imagePath):
+                        self.createScaledImage(imagePath)
+                    else:
+                        self.createThubnailPanel(imagePath) 
     
     def on_PhotoOrganizer_thub_clicked(self, widget,event,imagePath):
         self.createScaledImage(imagePath)
@@ -260,9 +351,14 @@ class PhotoOrganizerGUI(Gtk.Window):
                     
     def on_PhotoOrganizer_rotate_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
-        scaled_buf = pixbuf.rotate_simple(90)
+        scaled_buf = pixbuf.rotate_simple(GdkPixbuf.PixbufRotation.COUNTERCLOCKWISE)
         self.imageOpened.set_from_pixbuf(scaled_buf)
     
+    def on_PhotoOrganizer_rotate_right_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        scaled_buf = pixbuf.rotate_simple(GdkPixbuf.PixbufRotation.CLOCKWISE)
+        self.imageOpened.set_from_pixbuf(scaled_buf)
+        
     def on_PhotoOrganizer_border_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_border(pixbuf)) 
@@ -294,7 +390,23 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_mirror_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_mirror(pixbuf))
-    
+         
+    def on_PhotoOrganizer_darkViolet_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_darkViolet(pixbuf))  
+        
+    def on_PhotoOrganizer_lightGreen_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_lightGreen(pixbuf)) 
+        
+    def on_PhotoOrganizer_green_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_green(pixbuf)) 
+        
+    def on_PhotoOrganizer_white_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_white(pixbuf)) 
+            
     def on_PhotoOrganizer_posterize_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_posterize(pixbuf))
@@ -350,7 +462,15 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_sepia_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_sepia(pixbuf))
-        
+    
+    def on_PhotoOrganizer_watermark_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_watermarkSignature(pixbuf))
+    
+    def on_PhotoOrganizer_histogram_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.createImageHistogram(pixbuf))    
+
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
         dialog.set_default_size(800, 400)
@@ -436,68 +556,6 @@ class PhotoOrganizerGUI(Gtk.Window):
         END SECTION FOR EVENTS
     '''
             
-    def create_image_context_menu(self):
-        action_group = Gtk.ActionGroup("my_actions")
-        action_group.add_actions([                   
-            ("EditOriginalSize", Gtk.STOCK_ZOOM_FIT, "Original size", "<control><alt>O", None,
-             self.on_PhotoOrganizer_original_size_clicked),
-            ("EditMirror", Gtk.STOCK_OK, "Mirror", "<control><alt>M", None,
-             self.on_PhotoOrganizer_mirror_clicked),
-            ("EditRotate", Gtk.STOCK_REFRESH, "Rotate", "<control><alt>R", None,
-             self.on_PhotoOrganizer_rotate_clicked),
-            ("EditBordered", Gtk.STOCK_REFRESH, "Border", "<control><alt>B", None,
-             self.on_PhotoOrganizer_border_clicked),
-            ("EditUnbordered", Gtk.STOCK_REFRESH, "Unborder", "<control><alt>U", None,
-             self.on_PhotoOrganizer_unborder_clicked),                      
-            ("EditAutocontrast", Gtk.STOCK_REFRESH, "Autocontrast", "<control><alt>A", None,
-             self.on_PhotoOrganizer_autocontrast_clicked),        
-            ("EditDeform", Gtk.STOCK_REFRESH, "Deform", "<control><alt>D", None,
-             self.on_PhotoOrganizer_deform_clicked),    
-            ("EditEqualize", Gtk.STOCK_REFRESH, "Equalize", "<control><alt>E", None,
-             self.on_PhotoOrganizer_equalize_clicked),      
-            ("EditGreyScale", Gtk.STOCK_REFRESH, "GreyScale", "<control><alt>G", None,
-             self.on_PhotoOrganizer_greyscale_clicked), 
-            ("EditInvert", Gtk.STOCK_OK, "Invert", "<control><alt>I", None,
-             self.on_PhotoOrganizer_invert_clicked), 
-            ("EditPosterize", Gtk.STOCK_OK, "Posterize", "<control><alt>P", None,
-             self.on_PhotoOrganizer_posterize_clicked),  
-            ("EditSolarize", Gtk.STOCK_OK, "Solarize", "<control><alt>Z", None,
-             self.on_PhotoOrganizer_solarize_clicked),         
-            ("EditBlur", Gtk.STOCK_OK, "Blur", "<control><alt>K", None,
-             self.on_PhotoOrganizer_blur_clicked),
-            ("EditContour", Gtk.STOCK_OK, "Contour", "<control><alt>W", None,
-             self.on_PhotoOrganizer_contour_clicked),   
-            ("EditEdge", Gtk.STOCK_OK, "Edge", "<control><alt>E", None,
-             self.on_PhotoOrganizer_edge_clicked),
-            ("EditEmboss", Gtk.STOCK_OK, "Emboss", "<control><alt>B", None,
-             self.on_PhotoOrganizer_emboss_clicked),     
-            ("EditSmooth", Gtk.STOCK_OK, "Smooth", "<control><alt>T", None,
-             self.on_PhotoOrganizer_smooth_clicked), 
-            ("EditSharpen", Gtk.STOCK_OK, "Sharpen", "<control><alt>H", None,
-             self.on_PhotoOrganizer_sharpen_clicked), 
-            ("EditColor", Gtk.STOCK_OK, "Color", "<control><alt>Y", None,
-             self.on_PhotoOrganizer_color_clicked), 
-            ("EditBrigthness", Gtk.STOCK_OK, "Brigthness", "<control><alt>B", None,
-             self.on_PhotoOrganizer_brightness_clicked),
-            ("EditContrast", Gtk.STOCK_OK, "Contrast", "<control><alt>L", None,
-             self.on_PhotoOrganizer_contrast_clicked),  
-            ("EditSharpness", Gtk.STOCK_OK, "Sharpness", "<control><alt>G", None,
-             self.on_PhotoOrganizer_sharpness_clicked), 
-            ("EditPolaroid", Gtk.STOCK_OK, "Polaroid", "<control><alt>P", None,
-             self.on_PhotoOrganizer_polaroid_clicked),  
-            ("EditSepia", Gtk.STOCK_OK, "Sepia", "<control><alt>J", None,
-             self.on_PhotoOrganizer_sepia_clicked),                       
-            ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
-             self.on_PhotoOrganizer_save_clicked)                                             
-        ])
-        uimanager = Gtk.UIManager()
-        # Throws exception if something went wrong
-        uimanager.add_ui_from_string(UI_INFO)
-        # Add the accelerator group to the toplevel window
-        accelgroup = uimanager.get_accel_group()
-        self.add_accel_group(accelgroup)
-        uimanager.insert_action_group(action_group)
-        return uimanager
     
     def createScaledImage(self,imagePath): 
         pimage = Gtk.Image()
@@ -514,20 +572,8 @@ class PhotoOrganizerGUI(Gtk.Window):
         if os.path.isfile(imagePath):
             pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
             
-        # scale the image
-        orig_width =  pixbuf.get_width()
-        orig_height = pixbuf.get_height()
-        if orig_width >= orig_height:
-            if orig_width > 400:
-                orig_width = 400
-            if orig_height > 300:
-                orig_height = 300  
-        if orig_width < orig_height:
-            if orig_width > 300:
-                orig_width = 300
-            if orig_height > 400:
-                orig_height = 400            
-        scaled_buf = pixbuf.scale_simple(orig_width,orig_height,GdkPixbuf.InterpType.BILINEAR)
+        # scale the image          
+        scaled_buf = photoEffects.scaleImageFromPixbuf(pixbuf)
         pimage.set_from_pixbuf(scaled_buf)
         self.imagePathOpened = imagePath
         self.createImagePanel(pimage,imagePath)
@@ -619,7 +665,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                    else:
                        eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,imagePath+"/"+value.fileName)
                        pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath+"/"+value.fileName)           
-                   scaled_buf = pixbuf.scale_simple(50,50,GdkPixbuf.InterpType.BILINEAR)
+                   scaled_buf = pixbuf.scale_simple(60,60,GdkPixbuf.InterpType.BILINEAR)
                    pimage.set_from_pixbuf(scaled_buf)
                    eventBox.add(pimage)
                    thubnailWindow_table.attach(eventBox,left_attach,right_attach,top_attach,bottom_attach)
