@@ -2,6 +2,34 @@
 Created on Mar 01, 2013
 
 @author: hifly
+
+'''
+'''
+Photo Organizer uses icons from:
+
+WebIconSet.com
+http://www.webiconset.com/cute-blogging-icon-set
+License: Freeware
+    My-work-icon.png
+
+Icojam
+http://www.icojam.com/blog/?p=259
+License: Public Domain
+    pie-chart-graph-icon.png
+
+Design Kindle
+http://www.designkindle.com/2011/10/07/build-icons
+License: Freeware
+    Photos-icon.png
+
+Everaldo Coelho
+http://www.everaldo.com/
+License: GNU Lesser General Public License
+    App-gadu-icon.png
+
+Saki (Alexandre Moore)
+License: GNU General Public License
+    Actions-blue-arrow-redo-icon.png,Actions-blue-arrow-undo-icon.png,Apps-session-switch-arrow-icon.png,Mimetypes-image-icon.png,Devices-gnome-dev-floppy-icon.png
 '''
 
 import os

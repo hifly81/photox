@@ -9,62 +9,12 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkImage" id="image38">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image1">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image15">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
   <object class="GtkImage" id="image16">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
   <object class="GtkImage" id="image17">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image18">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image19">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image21">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image22">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image23">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image24">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image10">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
@@ -89,10 +39,59 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
+  <object class="GtkImage" id="image15">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image18">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image19">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image32">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image10">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
   <object class="GtkImage" id="image20">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image21">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image22">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image23">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image24">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
   </object>
   <object class="GtkImage" id="image25">
     <property name="visible">True</property>
@@ -107,7 +106,7 @@
   <object class="GtkImage" id="image27">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">Devices-gnome-dev-floppy-icon.png</property>
   </object>
   <object class="GtkImage" id="image28">
     <property name="visible">True</property>
@@ -134,11 +133,6 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
-  <object class="GtkImage" id="image32">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
   <object class="GtkImage" id="image33">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -147,19 +141,24 @@
   <object class="GtkImage" id="image34">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">Mimetypes-image-icon.png</property>
   </object>
   <object class="GtkImage" id="image35">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">Actions-blue-arrow-undo-icon.png</property>
   </object>
   <object class="GtkImage" id="image36">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">Apps-session-switch-arrow-icon.png</property>
   </object>
   <object class="GtkImage" id="image37">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image38">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
@@ -202,12 +201,12 @@
   <object class="GtkImage" id="image45">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">App-gadu-icon.png</property>
   </object>
   <object class="GtkImage" id="image46">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">Actions-blue-arrow-redo-icon.png</property>
   </object>
   <object class="GtkImage" id="image47">
     <property name="visible">True</property>
@@ -254,42 +253,7 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
-  <object class="GtkImage" id="image55">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image56">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image57">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image58">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image6">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image7">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
   <object class="GtkImage" id="image8">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image9">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
@@ -1185,12 +1149,13 @@
                     <property name="spacing">5</property>
                     <property name="homogeneous">True</property>
                     <child>
-                      <object class="GtkButton" id="button4">
+                      <object class="GtkButton" id="borderButton">
                         <property name="width_request">5</property>
                         <property name="height_request">5</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="tooltip_text" translatable="yes">Border</property>
                         <property name="image">image6</property>
                         <signal name="clicked" handler="on_PhotoOrganizer_border_clicked" swapped="no"/>
                       </object>
@@ -1297,13 +1262,14 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button22">
+                      <object class="GtkButton" id="colorButton">
                         <property name="width_request">5</property>
                         <property name="height_request">5</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="image">image24</property>
+                        <property name="tooltip_text" translatable="yes">Colorize</property>
+                        <property name="image">image59</property>
                         <signal name="clicked" handler="on_PhotoOrganizer_color_clicked" swapped="no"/>
                       </object>
                       <packing>
@@ -1378,5 +1344,45 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image55">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image56">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image57">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image58">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">pie-chart-graph-icon.png</property>
+  </object>
+  <object class="GtkImage" id="image59">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">My-work-icon.png</property>
+  </object>
+  <object class="GtkImage" id="image6">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">Photos-icon.png</property>
+  </object>
+  <object class="GtkImage" id="image7">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image9">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
   </object>
 </interface>
