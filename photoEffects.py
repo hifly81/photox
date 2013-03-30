@@ -141,6 +141,10 @@ def apply_green(pixbuf):
     y = Image.merge('RGB',(b,g,g))
     return fromImageToPixbuf(y)
 
+def apply_light(pixbuf,tilesize=50):
+    print "TODO"
+    return pixbuf
+
 def apply_polaroid(pixbuf,imageText):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     frameSize = (300,320)  
@@ -218,7 +222,7 @@ def apply_color(pixbuf,color=1.5):
     y = enhancer.enhance(color)
     return fromImageToPixbuf(y)
 
-def apply_watermarkSignature(pixbuf,textSignature="text",inputFont="/usr/share/fonts/gnu-free/FreeMono.ttf",rotation=25, opacity=0.25):
+def apply_watermarkSignature(pixbuf,textSignature="text",inputFont="/usr/share/fonts/liberation/LiberationMono-Regular.ttf",rotation=25, opacity=0.25):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
     textImage = Image.new('RGBA', y.size, (0,0,0,0))

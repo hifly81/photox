@@ -126,6 +126,7 @@ UI_INFO = """
     <menuitem action='EditWatermark' /> 
     <menuitem action='EditHistogram' /> 
     <menuitem action='EditCrop' /> 
+    <menuitem action='EditLight' /> 
     <menuitem action='EditSave' />
   </popup>
 </ui>
@@ -182,6 +183,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_watermark_clicked":self.on_PhotoOrganizer_watermark_clicked,
                     "on_PhotoOrganizer_histogram_clicked":self.on_PhotoOrganizer_histogram_clicked,
                     "on_PhotoOrganizer_crop_clicked":self.on_PhotoOrganizer_crop_clicked,
+                    "on_PhotoOrganizer_light_clicked":self.on_PhotoOrganizer_light_clicked,
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
         }
         #handler of GUI signals
@@ -268,7 +270,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditHistogram", Gtk.STOCK_OK, "Histogram", "<control><alt>Z", None,
              self.on_PhotoOrganizer_histogram_event),          
             ("EditCrop", Gtk.STOCK_OK, "Crop", "<control><alt>Z", None,
-             self.on_PhotoOrganizer_selection_clicked),                                                                
+             self.on_PhotoOrganizer_selection_clicked),  
+            ("EditLight", Gtk.STOCK_OK, "Light", "<control><alt>Z", None,
+             self.on_PhotoOrganizer_light_clicked),                                                                                      
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])
@@ -536,7 +540,11 @@ class PhotoOrganizerGUI(Gtk.Window):
     
     def on_PhotoOrganizer_histogram_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
-        self.imageOpened.set_from_pixbuf(photoEffects.createImageHistogram(pixbuf))    
+        self.imageOpened.set_from_pixbuf(photoEffects.createImageHistogram(pixbuf))   
+    
+    def on_PhotoOrganizer_light_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_light(pixbuf))  
 
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))

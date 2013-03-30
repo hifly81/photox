@@ -2,12 +2,25 @@
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkAction" id="action1"/>
-  <object class="GtkAdjustment" id="adjustment1">
-    <property name="lower">50</property>
-    <property name="upper">1000</property>
-    <property name="value">50</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
+  <object class="GtkImage" id="image16">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image17">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image18">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image19">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
   </object>
   <object class="GtkWindow" id="PhotoOrganizer">
     <property name="can_focus">False</property>
@@ -326,7 +339,7 @@
                 </child>
                 <child>
                   <object class="GtkBox" id="box5">
-                    <property name="height_request">350</property>
+                    <property name="height_request">370</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="spacing">5</property>
@@ -624,6 +637,44 @@
                                 <property name="position">3</property>
                               </packing>
                             </child>
+                            <child>
+                              <object class="GtkButton" id="lightButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Light</property>
+                                <property name="tooltip_text" translatable="yes">Light</property>
+                                <property name="image">image64</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_light_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="birgthnessButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Brightness</property>
+                                <property name="tooltip_text" translatable="yes">Brightness</property>
+                                <property name="image">image66</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_brightness_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">5</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -828,6 +879,25 @@
                                 <property name="position">3</property>
                               </packing>
                             </child>
+                            <child>
+                              <object class="GtkButton" id="colorButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Color</property>
+                                <property name="tooltip_text" translatable="yes">Color</property>
+                                <property name="image">image59</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_color_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">4</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -863,7 +933,80 @@
                               </packing>
                             </child>
                             <child>
-                              <placeholder/>
+                              <object class="GtkButton" id="borderButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Border</property>
+                                <property name="tooltip_text" translatable="yes">Border</property>
+                                <property name="image">image6</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_border_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="unborderButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Unborder</property>
+                                <property name="tooltip_text" translatable="yes">Unborder</property>
+                                <property name="image">image7</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_unborder_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="sharpnessButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Sharpness</property>
+                                <property name="tooltip_text" translatable="yes">Sharpness</property>
+                                <property name="image">image23</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_sharpness_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="deformButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Deform</property>
+                                <property name="tooltip_text" translatable="yes">Deform</property>
+                                <property name="image">image71</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_deform_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">4</property>
+                              </packing>
                             </child>
                           </object>
                           <packing>
@@ -907,7 +1050,55 @@
                           </packing>
                         </child>
                         <child>
-                          <placeholder/>
+                          <object class="GtkBox" id="box15">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="spacing">5</property>
+                            <child>
+                              <object class="GtkButton" id="posterizeButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Posterize</property>
+                                <property name="tooltip_text" translatable="yes">Posterize</property>
+                                <property name="image">image73</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_posterize_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="contrastButton">
+                                <property name="width_request">5</property>
+                                <property name="height_request">5</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="has_tooltip">True</property>
+                                <property name="tooltip_markup" translatable="yes">Contrast</property>
+                                <property name="tooltip_text" translatable="yes">Contrast</property>
+                                <property name="image">image74</property>
+                                <signal name="clicked" handler="on_PhotoOrganizer_contrast_clicked" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="padding">5</property>
+                            <property name="position">8</property>
+                          </packing>
                         </child>
                       </object>
                       <packing>
@@ -924,153 +1115,8 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox" id="box3">
-                    <property name="height_request">10</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="spacing">5</property>
-                    <property name="homogeneous">True</property>
-                    <child>
-                      <object class="GtkButton" id="borderButton">
-                        <property name="width_request">5</property>
-                        <property name="height_request">5</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Border</property>
-                        <property name="image">image6</property>
-                        <signal name="clicked" handler="on_PhotoOrganizer_border_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">3</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="button5">
-                        <property name="width_request">5</property>
-                        <property name="height_request">5</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="image">image7</property>
-                        <signal name="clicked" handler="on_PhotoOrganizer_unborder_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="button7">
-                        <property name="width_request">5</property>
-                        <property name="height_request">5</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="image">image9</property>
-                        <signal name="clicked" handler="on_PhotoOrganizer_deform_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">6</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="button11">
-                        <property name="width_request">5</property>
-                        <property name="height_request">5</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="image">image13</property>
-                        <signal name="clicked" handler="on_PhotoOrganizer_posterize_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">10</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="brightnessButton">
-                        <property name="width_request">5</property>
-                        <property name="height_request">5</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="image">image21</property>
-                        <signal name="clicked" handler="on_PhotoOrganizer_brightness_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">18</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="button20">
-                        <property name="width_request">5</property>
-                        <property name="height_request">5</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="image">image22</property>
-                        <signal name="clicked" handler="on_PhotoOrganizer_contrast_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">19</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="button21">
-                        <property name="width_request">5</property>
-                        <property name="height_request">5</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="image">image23</property>
-                        <signal name="clicked" handler="on_PhotoOrganizer_sharpness_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">20</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="colorButton">
-                        <property name="width_request">5</property>
-                        <property name="height_request">5</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Colorize</property>
-                        <property name="image">image59</property>
-                        <signal name="clicked" handler="on_PhotoOrganizer_color_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">21</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">10</property>
-                    <property name="position">2</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkBox" id="box1">
-                    <property name="height_request">120</property>
+                    <property name="height_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="orientation">vertical</property>
@@ -1127,12 +1173,14 @@
       </object>
     </child>
   </object>
-  <object class="GtkImage" id="image1">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+  <object class="GtkAdjustment" id="adjustment1">
+    <property name="lower">50</property>
+    <property name="upper">1000</property>
+    <property name="value">50</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
   </object>
-  <object class="GtkImage" id="image10">
+  <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
@@ -1147,37 +1195,12 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
-  <object class="GtkImage" id="image13">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
   <object class="GtkImage" id="image14">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
   <object class="GtkImage" id="image15">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image16">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image17">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image18">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image19">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
@@ -1190,22 +1213,12 @@
   <object class="GtkImage" id="image21">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="pixbuf">1364582317_75_Brightness-Half.png</property>
-  </object>
-  <object class="GtkImage" id="image22">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
   <object class="GtkImage" id="image23">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
-  </object>
-  <object class="GtkImage" id="image3">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="pixbuf">1364582754_expand_full_screen.png</property>
   </object>
   <object class="GtkImage" id="image24">
     <property name="visible">True</property>
@@ -1235,6 +1248,11 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">1364582754_expand_full_screen.png</property>
   </object>
   <object class="GtkImage" id="image30">
     <property name="visible">True</property>
@@ -1277,6 +1295,11 @@
     <property name="stock">gtk-missing-image</property>
   </object>
   <object class="GtkImage" id="image38">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image10">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
@@ -1411,12 +1434,72 @@
     <property name="can_focus">False</property>
     <property name="pixbuf">Devices-gnome-dev-floppy-icon.png</property>
   </object>
+  <object class="GtkImage" id="image62">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
   <object class="GtkImage" id="image63">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
+  <object class="GtkImage" id="image64">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image65">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image66">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">1364582317_75_Brightness-Half.png</property>
+  </object>
+  <object class="GtkImage" id="image67">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image68">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image69">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
   <object class="GtkImage" id="image7">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image70">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image71">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image72">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image73">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image74">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
