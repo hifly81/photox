@@ -1,9 +1,28 @@
+# coding: latin-1
+
 '''
 Created on Mar 01, 2013
 
 @author: hifly
 
 '''
+
+'''
+The Python Imaging Library is:
+
+Copyright © 1997-2005 by Secret Labs AB
+Copyright © 1995-2005 by Fredrik Lundh
+By obtaining, using, and/or copying this software and/or its associated documentation, you agree that you have read, understood, and will comply with the following terms and conditions:
+
+Permission to use, copy, modify, and distribute this software and its associated documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appears in all copies, and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of Secret Labs AB or the author not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.
+
+SECRET LABS AB AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL SECRET LABS AB OR THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+'''
+
+'''
+Cairo is free software and is available to be redistributed and/or modified under the terms of either the GNU Lesser General Public License (LGPL) version 2.1 or the Mozilla Public License (MPL) version 1.1 at your option.
+'''
+
 '''
 Photo Organizer uses icons from:
 
@@ -30,6 +49,18 @@ License: GNU Lesser General Public License
 Saki (Alexandre Moore)
 License: GNU General Public License
     Actions-blue-arrow-redo-icon.png,Actions-blue-arrow-undo-icon.png,Apps-session-switch-arrow-icon.png,Mimetypes-image-icon.png,Devices-gnome-dev-floppy-icon.png
+
+Victor Erixon 
+http://victorerixon.com/
+License: Free for commercial use
+Found at: http://www.iconfinder.com/icondetails/106148/32/brightness_half_icon
+    1364582317_75_Brightness-Half.png
+ 
+Jeremy Sallee 
+http://salleedesign.com
+License: Free for commercial use
+Found at: http://www.iconfinder.com/icondetails/82192/16/expand_full_screen_icon
+    1364582754_expand_full_screen.png
 '''
 
 import os
@@ -40,6 +71,9 @@ import twitterUtil
 import photoOrganizerStorage
 import photoOrganizerUtil
 import photoEffects
+import StringIO
+import Image
+from cairo import ImageSurface 
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
 from photoOrganizerStorage import PhotoOrganizerPref
 from photoOrganizerUtil import AlbumCollection
@@ -91,6 +125,7 @@ UI_INFO = """
     <menuitem action='EditGreen' />
     <menuitem action='EditWatermark' /> 
     <menuitem action='EditHistogram' /> 
+    <menuitem action='EditCrop' /> 
     <menuitem action='EditSave' />
   </popup>
 </ui>
@@ -146,6 +181,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_green_clicked":self.on_PhotoOrganizer_green_clicked,
                     "on_PhotoOrganizer_watermark_clicked":self.on_PhotoOrganizer_watermark_clicked,
                     "on_PhotoOrganizer_histogram_clicked":self.on_PhotoOrganizer_histogram_clicked,
+                    "on_PhotoOrganizer_crop_clicked":self.on_PhotoOrganizer_crop_clicked,
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
         }
         #handler of GUI signals
@@ -228,7 +264,11 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditGreen", Gtk.STOCK_OK, "Green", "<control><alt>J", None,
              self.on_PhotoOrganizer_green_clicked), 
             ("EditWatermark", Gtk.STOCK_OK, "Watermark", "<control><alt>Z", None,
-             self.on_PhotoOrganizer_watermark_clicked),                                        
+             self.on_PhotoOrganizer_watermark_clicked),  
+            ("EditHistogram", Gtk.STOCK_OK, "Histogram", "<control><alt>Z", None,
+             self.on_PhotoOrganizer_histogram_event),          
+            ("EditCrop", Gtk.STOCK_OK, "Crop", "<control><alt>Z", None,
+             self.on_PhotoOrganizer_selection_clicked),                                                                
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])
@@ -355,7 +395,6 @@ class PhotoOrganizerGUI(Gtk.Window):
             tree_model, tree_iter = selection.get_selected()
             if (tree_model is not None):
                 imagePath = tree_model.get_value(tree_iter, 0)
-        
                 if(self.twitterSearch):
                     if(imagePath == self.twitterCurrentQuery):
                         self.createThubnailPanel(imagePath)
@@ -547,7 +586,6 @@ class PhotoOrganizerGUI(Gtk.Window):
           if newImagePath is not None:
               self.createScaledImage(newImagePath)
     
-    #create image viewer panel
     def on_PhotoOrganizer_full_image_clicked(self,pimage,imageName):      
         self.winImage = Gtk.Window()
         self.winImage.set_title(imageName)
@@ -561,6 +599,101 @@ class PhotoOrganizerGUI(Gtk.Window):
         y1 = y+50
         self.winImage.move(x, y1)
         self.winImage.show_all() 
+    
+    def on_PhotoOrganizer_crop_clicked(self,widget):    
+        imagePanel = self.builder.get_object("imagePanel")
+        try:
+            imagePanel.remove(imagePanel.get_children()[0])
+        except:
+            pass
+        self.startAppend = False 
+        self.deleteCoords = False
+        self.coords = []
+        self.darea = Gtk.DrawingArea()
+        pixbuf = self.imageOpened.get_pixbuf()
+        width,height = pixbuf.get_width(),pixbuf.get_height() 
+        self.imageForDrawing = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+        self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.POINTER_MOTION_MASK) 
+        self.darea.connect("draw", self.on_drawing_area_draw)
+        self.darea.connect("button-press-event", self.on_drawing_area_button_press)
+        self.darea.connect("button-release-event", self.on_drawing_area_button_release)
+        self.darea.connect("motion_notify_event", self.on_drawing_area_button_move) 
+        self.add(self.darea)
+        self.darea.show()
+        imagePanel.add(self.darea)
+        imagePanel.show_all()
+    
+    def on_drawing_area_draw(self, wid, cr):
+        buffer = StringIO.StringIO()
+        self.image = self.imageForDrawing
+        self.image.save(buffer, format="PNG")
+        buffer.seek(0)
+        cr.save()
+        iss = ImageSurface.create_from_png(buffer)
+        cr.set_source_surface(iss)
+        cr.paint()
+        cr.restore()
+
+        for i in self.coords:
+            for j in self.coords:
+        
+                firstCoord = self.coords[0]
+                secondCoord = self.coords[len(self.coords)-1]
+        
+                cr.move_to(firstCoord[0],firstCoord[1])
+                cr.line_to(secondCoord[0],firstCoord[1])
+                cr.move_to(firstCoord[0],firstCoord[1])
+                cr.line_to(firstCoord[0],secondCoord[1])
+                cr.move_to(secondCoord[0],firstCoord[1])
+                cr.line_to(secondCoord[0],secondCoord[1])
+                cr.move_to(firstCoord[0],secondCoord[1])
+                cr.line_to(secondCoord[0],secondCoord[1])
+            
+                cr.stroke()
+
+                self.box = (int(firstCoord[0]),int(firstCoord[1]),int(secondCoord[0]),int(secondCoord[1]))
+      
+
+        if (self.deleteCoords == True):
+            if(int(self.box[0])>int(self.box[2])):
+                self.box = (self.box[2],self.box[1],self.box[0],self.box[3])
+            if(int(self.box[1])>int(self.box[3])):
+                self.box = (self.box[0],self.box[3],self.box[2],self.box[1])
+                
+            self.image = self.image.crop(self.box)
+            del self.coords[:] 
+            cr.set_source_rgb(1, 1, 1)
+            cr.rectangle(0, 0, 1024, 768)
+            cr.fill() 
+        
+            buffer = StringIO.StringIO()
+            self.image.save(buffer, format="PNG")
+            buffer.seek(0)
+            cr.save()
+            iss = ImageSurface.create_from_png(buffer)
+
+            cr.set_source_surface(iss)
+            cr.paint()
+            cr.restore()
+
+           
+    
+    def on_drawing_area_button_release(self, w, e):
+        self.coords.append([e.x, e.y])
+        self.darea.queue_draw()
+        self.deleteCoords = True
+        self.startAppend = False
+    
+    def on_drawing_area_button_move(self, w, e):
+        if(self.startAppend == True):
+            self.coords.append([e.x, e.y])
+            self.darea.queue_draw()
+            self.deleteCoords = False
+                                  
+    def on_drawing_area_button_press(self, w, e):
+        if e.type == Gdk.EventType.BUTTON_PRESS and e.button == 1:
+            self.coords.append([e.x, e.y])
+            self.startAppend = True
     
     def nextRightImage(self):
         currentImageKey = self.imagePathOpened[self.imagePathOpened.rfind("/")+1:]
@@ -636,7 +769,6 @@ class PhotoOrganizerGUI(Gtk.Window):
                 gpsText = gpsText+str(currentPhoto.latitude)+","+str(currentPhoto.longitude)
             self.builder.get_object("detailsEntry").get_buffer().set_text(dateText+descText+authorText+modelText+gpsText)
     
-    #create image viewer panel
     def createImagePanel(self,pimage,imageName):    
         imagePanel = self.builder.get_object("imagePanel")
         try:
@@ -651,7 +783,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         pimage.show()
         imagePanel.add(eventBox)
         imagePanel.show_all()
-    
+
     def createThubnailPanel(self,imagePath):
           imagePanel = self.builder.get_object("imagePanel")
           try:
