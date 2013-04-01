@@ -74,8 +74,9 @@ import photoEffects
 import StringIO
 import Image
 from cairo import ImageSurface 
-from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
+from gi.repository import Gtk,GdkPixbuf,Gdk,GObject,GLib
 from photoOrganizerStorage import PhotoOrganizerPref
+from photoOrganizerUtil import UpdateAlbum
 from photoOrganizerUtil import AlbumCollection
 from photoOrganizerUtil import Album
 from photoOrganizerUtil import PhotoFile
@@ -198,9 +199,11 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)           
         self.window.show_all()
         
+  
+        
         #load pref at startup, including albums saved
         self.loadPreferences()
-    
+
         #main gtk
         Gtk.main()
     
@@ -268,7 +271,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditWatermark", Gtk.STOCK_OK, "Watermark", "<control><alt>Z", None,
              self.on_PhotoOrganizer_watermark_clicked),  
             ("EditHistogram", Gtk.STOCK_OK, "Histogram", "<control><alt>Z", None,
-             self.on_PhotoOrganizer_histogram_event),          
+             self.on_PhotoOrganizer_histogram_clicked),          
             ("EditCrop", Gtk.STOCK_OK, "Crop", "<control><alt>Z", None,
              self.on_PhotoOrganizer_selection_clicked),  
             ("EditLight", Gtk.STOCK_OK, "Light", "<control><alt>Z", None,
@@ -316,6 +319,8 @@ class PhotoOrganizerGUI(Gtk.Window):
             
             # You'll need to import gobject
             GObject.timeout_add(100, self.callScanPhoto)
+            dialog.destroy()
+        else:
             dialog.destroy()
 
     
@@ -581,6 +586,8 @@ class PhotoOrganizerGUI(Gtk.Window):
                 photoOrganizerUtil.savePhotoFromUrl(self.lastTwitterImageUrl,filename)
             else:
                 photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(),"jpeg",100,filename);
+        else:
+            dialog.destroy()
            
     def on_PhotoOrganizer_image_keypress_event(self,widget,event) :
         newImagePath = None
@@ -876,7 +883,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,treeview,self.imageMap,leftPanel)
         self.lastAlbumCollectionScanned = albumCollection 
         self.totalPhotoDictionary = photoDictionary
-        #create tree panel
+
         if len(albumCollection.albums) >0:
             self.imageMap = imageDictionary
             self.currentTreeview = treeview
@@ -938,6 +945,18 @@ class PhotoOrganizerGUI(Gtk.Window):
                 leftPanel.add(treeview)
                 leftPanel.show_all()
                 self.twitterSearch = False
+                
+                statusBar = self.builder.get_object("statusbar1")
+                context = statusBar.get_context_id("example")  
+                threads = []
+                #start threads to search for new photos
+                for album in savedAlbums.albums:
+                    scan = UpdateAlbum(self.totalPhotoDictionary,album.title,treeview.get_model(),statusBar,context)
+                    threads.append(scan)
+                    scan.start()
+
+               
+                
             #some pref properties stored could be not present --> no previous search available
             except:
                 pass
