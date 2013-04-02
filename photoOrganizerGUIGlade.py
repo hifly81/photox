@@ -92,9 +92,9 @@ GObject.threads_init()
 #const
 GLADE_CONF = "glade/photoOrganizerGui.glade"
 
+#global vars
 global totalPhotoDictionary 
 totalPhotoDictionary = {}
-
 global imageMap
 imageMap = {}
 
@@ -149,6 +149,7 @@ class UpdateAlbum(threading.Thread):
         self.path = album.title
         #ref to tree element
         self.treestore = treestore
+        #ref to status bar
         self.statusBar = statusBar
         self.context = context
         threading.Thread.__init__(self)
@@ -288,10 +289,10 @@ class PhotoOrganizerGUI(Gtk.Window):
             
         #show main window
         self.window = self.builder.get_object("PhotoOrganizer")
-        self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)           
+        self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)   
+        #center the window
+        self.window.set_position(Gtk.WindowPosition.CENTER)         
         self.window.show_all()
-        
-  
         
         #load pref at startup, including albums saved
         self.loadPreferences()
@@ -955,7 +956,11 @@ class PhotoOrganizerGUI(Gtk.Window):
         loadImage = Gtk.Image()
         pixbufanim = GdkPixbuf.PixbufAnimation.new_from_file("images/load.gif")
         loadImage.set_from_animation(pixbufanim)
-        loadWindow.add(loadImage)  
+        #no title bar
+        loadWindow.set_decorated(False)
+        loadWindow.add(loadImage)
+        #center the window
+        loadWindow.set_position(Gtk.WindowPosition.CENTER)  
         loadWindow.show_all()
         
         while Gtk.events_pending():
@@ -971,7 +976,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         #set current tab
         self.builder.get_object("notebook1").set_current_page(0)
         
-        imageMap = {}
+        #need to reset
+        global imageMap 
+        imageMap= {}
         # call retrieve album list
         albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,treeview,imageMap,leftPanel)
         self.lastAlbumCollectionScanned = albumCollection 
@@ -1010,7 +1017,10 @@ class PhotoOrganizerGUI(Gtk.Window):
             
     def removeSearchResult(self,treeview):
         try:
-            treeview.remove_column(treeview.get_column(0))
+            #treeview.remove_column(treeview.get_column(0))
+            treeview.get_model().clear()
+            treeview.clear()
+            self.currentTreeview.clear()
         except:
             pass  
     

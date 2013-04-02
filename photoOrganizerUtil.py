@@ -112,6 +112,8 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                 albumNameCell = Gtk.CellRendererText()
                 titleTree = "Album found ("+str(len(albumCollection.albums))+") - Total pics ("+str(totalPicsFound)+")"
                 albumNameCol = Gtk.TreeViewColumn(titleTree, albumNameCell, text=0)
+                for col in treeview.get_columns():
+                    treeview.remove_column (col)
                 treeview.insert_column(albumNameCol, 0)
                 leftPanel.add(treeview)
                 while Gtk.events_pending():
