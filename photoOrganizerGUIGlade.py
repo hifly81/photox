@@ -73,10 +73,11 @@ import photoOrganizerUtil
 import photoEffects
 import StringIO
 import Image
+import imghdr
+import threading
 from cairo import ImageSurface 
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject,GLib
 from photoOrganizerStorage import PhotoOrganizerPref
-from photoOrganizerUtil import UpdateAlbum
 from photoOrganizerUtil import AlbumCollection
 from photoOrganizerUtil import Album
 from photoOrganizerUtil import PhotoFile
@@ -90,6 +91,12 @@ GObject.threads_init()
 
 #const
 GLADE_CONF = "glade/photoOrganizerGui.glade"
+
+global totalPhotoDictionary 
+totalPhotoDictionary = {}
+
+global imageMap
+imageMap = {}
 
 #context menu not designed in GLADE
 UI_INFO = """
@@ -133,18 +140,103 @@ UI_INFO = """
 </ui>
 """
 
+
+class UpdateAlbum(threading.Thread):
+    def __init__(self,album,treestore,statusBar,context):
+        #ref to album
+        self.album = album
+        #ref to path to scan
+        self.path = album.title
+        #ref to tree element
+        self.treestore = treestore
+        self.statusBar = statusBar
+        self.context = context
+        threading.Thread.__init__(self)
+    
+    
+    def update_tree_store(self,store,pathToSearch):
+        rootiter = store.get_iter_first()
+        self.update_rows(store, rootiter,pathToSearch)
+
+    def update_rows(self,store, treeiter,pathToSearch):
+        while treeiter != None:
+            if pathToSearch in str(store[treeiter][:]):
+                  self.treestore.remove(treeiter)
+            if store.iter_has_child(treeiter):
+                childiter = store.iter_children(treeiter)
+                self.update_rows(store, childiter,pathToSearch)
+            treeiter = store.iter_next(treeiter)
+            
+    def run(self):
+        for (path, dirs,files) in os.walk(self.path):
+            for file in files:
+                key = totalPhotoDictionary.get(self.path+"/"+file, None )
+                if key is None:
+                    #img is not in a previous scanning
+                    if imghdr.what(self.path+"/"+file)!=None:
+                        rowIndex = 0
+                        for row in self.treestore:
+                            # Print values of all columns
+                            rowValue = row[:]
+                            if self.path in rowValue:
+                                #should add to the treeiter
+                                iterPath = Gtk.TreePath(rowIndex)
+                                treeiter = self.treestore.get_iter(iterPath)
+                                self.treestore.append(treeiter,['%s' %self.path+"/"+file])
+                                self.statusBar.push(self.context,"added:"+self.path+"/"+file)
+                                while Gtk.events_pending():
+                                    Gtk.main_iteration_do(False)
+                                photoFile = photoOrganizerUtil.get_exif_data(self.path+"/"+file)
+                                if photoFile==None:
+                                    photoFile = PhotoFile()  
+                                photoFile.dirName = path
+                                photoFile.fileName = file
+                                photoFile.shortName = photoFile.fileName
+                                #add to original album
+                                self.album.pics.append(photoFile)
+                                #add to dic
+                                totalPhotoDictionary[self.path+"/"+file] = photoFile
+                                #update imageMap
+                                subImageMap = {}
+                                subImageMap[photoFile.fileName] = photoFile
+                                imageMap[self.path].update(subImageMap)
+                            rowIndex+=1
+        
+        listIndex = 0
+        for photo in self.album.pics:
+            isFile = os.path.exists(photo.dirName+"/"+photo.fileName)
+            if isFile==False:
+                #del from dic
+                key = totalPhotoDictionary.get(self.path+"/"+photo.fileName, None )
+                if key is not None:
+                    del totalPhotoDictionary[self.path+"/"+photo.fileName]
+                #del from album pics
+                self.album.pics.pop(listIndex)
+                #update imageMap
+                subImageMap = imageMap[self.path]
+                del subImageMap[photo.fileName]
+                #delete from treeview
+                self.update_tree_store(self.treestore,self.path+"/"+photo.fileName)
+        
+                self.statusBar.push(self.context,"removed:"+self.path+"/"+photo.fileName)
+                while Gtk.events_pending():
+                    Gtk.main_iteration_do(False)
+            listIndex+=1
+               
+
+          
+                        
+
 class PhotoOrganizerGUI(Gtk.Window):
     
     def __init__(self):
         #references
         self.imagePathOpened = None
-        self.imageMap = {}
         self.thubnailPanel = {}
         self.twitterCurrentQuery = None
         self.currenWinImage = None
         self.entry_folder_text = None
-        self.lastAlbumCollectionScanned = None
-        
+
         #build GUI from glade
         self.builder = Gtk.Builder()
         self.builder.add_from_file(GLADE_CONF)
@@ -766,7 +858,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     pass
         else:
             self.builder.get_object("detailsEntry").get_buffer().set_text("")
-            currentPhoto = self.totalPhotoDictionary[imagePath]
+            currentPhoto = totalPhotoDictionary[imagePath]
             gpsText = "\ntaken at:"
             dateText = "date:"
             authorText = "\nby:"
@@ -812,7 +904,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                while Gtk.events_pending():
                     Gtk.main_iteration_do(False)
           else:          
-              self.subImageMap = self.imageMap[imagePath]
+              self.subImageMap = imageMap[imagePath]
               thubnailsSize = len(self.subImageMap.items())
               tempRows = math.ceil(thubnailsSize/10)
               tableRows = int(math.fabs(tempRows))
@@ -878,14 +970,15 @@ class PhotoOrganizerGUI(Gtk.Window):
         leftPanel = self.builder.get_object("leftPanel")
         #set current tab
         self.builder.get_object("notebook1").set_current_page(0)
-
+        
+        imageMap = {}
         # call retrieve album list
-        albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,treeview,self.imageMap,leftPanel)
+        albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,treeview,imageMap,leftPanel)
         self.lastAlbumCollectionScanned = albumCollection 
-        self.totalPhotoDictionary = photoDictionary
+        totalPhotoDictionary = photoDictionary
 
         if len(albumCollection.albums) >0:
-            self.imageMap = imageDictionary
+            imageMap = imageDictionary
             self.currentTreeview = treeview
             treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
             loadWindow.destroy()
@@ -900,12 +993,12 @@ class PhotoOrganizerGUI(Gtk.Window):
         treestore = Gtk.TreeStore(str)
         for album in albumCollection.albums:
             piter = treestore.append(None, ['%s' % album.title])
-            self.imageMap[album.title] = None
+            imageMap[album.title] = None
             subImageMap = {}
             for photo in album.pics:
                 subImageMap[photo.fileName] = photo
                 treestore.append(piter, ['%s' %album.title+"/"+photo.fileName])
-            self.imageMap[album.title] = subImageMap        
+            imageMap[album.title] = subImageMap        
         treeview.set_model(treestore)
         albumNameCell = Gtk.CellRendererText()
         #build title tree string
@@ -932,11 +1025,11 @@ class PhotoOrganizerGUI(Gtk.Window):
                 treeview = self.builder.get_object("treeviewAlbum")
                 self.createFixedPhotoTree(photoOrganizerPref.albumCollection,treeview)
                 #rebuild photo indexes
-                self.totalPhotoDictionary = {}
+                self.lastAlbumCollectionScanned = photoOrganizerPref.albumCollection
                 savedAlbums = photoOrganizerPref.albumCollection
                 for album in savedAlbums.albums:
                     for photo in album.pics:
-                        self.totalPhotoDictionary[album.title+"/"+photo.fileName] = photo
+                       totalPhotoDictionary[album.title+"/"+photo.fileName] = photo
 
                 
                 #set current tab
@@ -951,7 +1044,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                 threads = []
                 #start threads to search for new photos
                 for album in savedAlbums.albums:
-                    scan = UpdateAlbum(self.totalPhotoDictionary,album.title,treeview.get_model(),statusBar,context)
+                    scan = UpdateAlbum(album,treeview.get_model(),statusBar,context)
                     threads.append(scan)
                     scan.start()
 

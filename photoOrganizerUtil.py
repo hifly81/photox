@@ -18,7 +18,6 @@ Permission to use, copy, modify, and distribute this software and its associated
 SECRET LABS AB AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL SECRET LABS AB OR THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 '''
 
-import threading
 import os
 import urllib
 import imghdr
@@ -30,39 +29,6 @@ from PIL.ExifTags import TAGS,GPSTAGS
 
 logging.config.fileConfig('config/logging.conf')
 logger = logging.getLogger('photoOrganizer')
-
-class UpdateAlbum(threading.Thread):
-    def __init__(self,totalPhotoDictionary,path,treestore,statusBar,context):
-        #ref to elements saved in albums
-        self.totalPhotoDictionary = totalPhotoDictionary
-        #ref to path to scan
-        self.path = path
-        #ref to tree element
-        self.treestore = treestore
-        self.statusBar = statusBar
-        self.context = context
-        threading.Thread.__init__(self)
-
-    def run(self):
-        for (path, dirs,files) in os.walk(self.path):
-            for file in files:
-                key = self.totalPhotoDictionary.get(self.path+"/"+file, None )
-                if key is None:
-                    #img is not in a previous scanning
-                    if imghdr.what(self.path+"/"+file)!=None:
-                        rowIndex = 0
-                        for row in self.treestore:
-                            # Print values of all columns
-                            rowValue = row[:]
-                            if self.path in rowValue:
-                                #should add to the treeiter
-                                iterPath = Gtk.TreePath(rowIndex)
-                                treeiter = self.treestore.get_iter(iterPath)
-                                self.treestore.append(treeiter,['%s' %self.path+"/"+file])
-                                self.statusBar.push(self.context,"added:"+self.path+"/"+file)
-                                while Gtk.events_pending():
-                                    Gtk.main_iteration_do(False)
-                            rowIndex+=1
 
 #class which stores img info
 class PhotoFile:
