@@ -2,6 +2,18 @@
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkAction" id="action1"/>
+  <object class="GtkAdjustment" id="adjustment1">
+    <property name="lower">50</property>
+    <property name="upper">1000</property>
+    <property name="value">50</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkImage" id="image22">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
   <object class="GtkWindow" id="PhotoOrganizer">
     <property name="can_focus">False</property>
     <property name="has_tooltip">True</property>
@@ -322,6 +334,7 @@
                     <property name="height_request">370</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="border_width">1</property>
                     <property name="spacing">5</property>
                     <child>
                       <object class="GtkScrolledWindow" id="imagePanel">
@@ -347,6 +360,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="orientation">vertical</property>
+                        <property name="spacing">6</property>
                         <child>
                           <object class="GtkBox" id="box7">
                             <property name="width_request">5</property>
@@ -1084,6 +1098,7 @@
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">True</property>
+                        <property name="padding">5</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
@@ -1125,6 +1140,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="padding">5</property>
                             <property name="position">0</property>
                           </packing>
                         </child>
@@ -1188,13 +1204,6 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkAdjustment" id="adjustment1">
-    <property name="lower">50</property>
-    <property name="upper">1000</property>
-    <property name="value">50</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
   </object>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
@@ -1261,15 +1270,10 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-missing-image</property>
   </object>
-  <object class="GtkImage" id="image22">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
   <object class="GtkImage" id="image23">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">1365089479_sharpen.png</property>
   </object>
   <object class="GtkImage" id="image24">
     <property name="visible">True</property>
@@ -1448,7 +1452,7 @@
   <object class="GtkImage" id="image56">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">1365089108_text_signature.png</property>
   </object>
   <object class="GtkImage" id="image57">
     <property name="visible">True</property>
@@ -1488,7 +1492,7 @@
   <object class="GtkImage" id="image63">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">1365088291_edit-cut.png</property>
   </object>
   <object class="GtkImage" id="image64">
     <property name="visible">True</property>
@@ -1548,7 +1552,7 @@
   <object class="GtkImage" id="image74">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-missing-image</property>
+    <property name="pixbuf">1365103922_contrast_high.png</property>
   </object>
   <object class="GtkImage" id="image8">
     <property name="visible">True</property>

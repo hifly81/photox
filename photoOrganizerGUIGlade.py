@@ -7,61 +7,6 @@ Created on Mar 01, 2013
 
 '''
 
-'''
-The Python Imaging Library is:
-
-Copyright © 1997-2005 by Secret Labs AB
-Copyright © 1995-2005 by Fredrik Lundh
-By obtaining, using, and/or copying this software and/or its associated documentation, you agree that you have read, understood, and will comply with the following terms and conditions:
-
-Permission to use, copy, modify, and distribute this software and its associated documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appears in all copies, and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of Secret Labs AB or the author not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.
-
-SECRET LABS AB AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL SECRET LABS AB OR THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-'''
-
-'''
-Cairo is free software and is available to be redistributed and/or modified under the terms of either the GNU Lesser General Public License (LGPL) version 2.1 or the Mozilla Public License (MPL) version 1.1 at your option.
-'''
-
-'''
-Photo Organizer uses icons from:
-
-WebIconSet.com
-http://www.webiconset.com/cute-blogging-icon-set
-License: Freeware
-    My-work-icon.png
-
-Icojam
-http://www.icojam.com/blog/?p=259
-License: Public Domain
-    pie-chart-graph-icon.png
-
-Design Kindle
-http://www.designkindle.com/2011/10/07/build-icons
-License: Freeware
-    Photos-icon.png
-
-Everaldo Coelho
-http://www.everaldo.com/
-License: GNU Lesser General Public License
-    App-gadu-icon.png
-
-Saki (Alexandre Moore)
-License: GNU General Public License
-    Actions-blue-arrow-redo-icon.png,Actions-blue-arrow-undo-icon.png,Apps-session-switch-arrow-icon.png,Mimetypes-image-icon.png,Devices-gnome-dev-floppy-icon.png
-
-Victor Erixon 
-http://victorerixon.com/
-License: Free for commercial use
-Found at: http://www.iconfinder.com/icondetails/106148/32/brightness_half_icon
-    1364582317_75_Brightness-Half.png
- 
-Jeremy Sallee 
-http://salleedesign.com
-License: Free for commercial use
-Found at: http://www.iconfinder.com/icondetails/82192/16/expand_full_screen_icon
-    1364582754_expand_full_screen.png
-'''
 
 import os
 import math
@@ -366,7 +311,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditHistogram", Gtk.STOCK_OK, "Histogram", "<control><alt>Z", None,
              self.on_PhotoOrganizer_histogram_clicked),          
             ("EditCrop", Gtk.STOCK_OK, "Crop", "<control><alt>Z", None,
-             self.on_PhotoOrganizer_selection_clicked),  
+             self.on_PhotoOrganizer_crop_clicked),  
             ("EditLight", Gtk.STOCK_OK, "Light", "<control><alt>Z", None,
              self.on_PhotoOrganizer_light_clicked),                                                                                      
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
