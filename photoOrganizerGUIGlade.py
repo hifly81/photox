@@ -47,41 +47,58 @@ imageMap = {}
 UI_INFO = """
 <ui>
   <popup name='PopupMenu'>
-    <menuitem action='EditOriginalSize' />
-    <menuitem action='EditMirror' />
-    <menuitem action='EditRotate' />
-    <menuitem action='EditRotateRight' />
-    <menuitem action='EditBordered' />
-    <menuitem action='EditUnbordered' />
-    <menuitem action='EditAutocontrast' />
-    <menuitem action='EditDeform' />
-    <menuitem action='EditEqualize' />
-    <menuitem action='EditGreyScale' />
-    <menuitem action='EditInvert' />
-    <menuitem action='EditPosterize' />
-    <menuitem action='EditSolarize' />
-    <menuitem action='EditBlur' />
-    <menuitem action='EditContour' />
-    <menuitem action='EditEdge' />
-    <menuitem action='EditEmboss' />
-    <menuitem action='EditSmooth' />
-    <menuitem action='EditSharpen' />
-    <menuitem action='EditBrigthness' />
-    <menuitem action='EditContrast' />
-    <menuitem action='EditSharpness' />
-    <menuitem action='EditColor' />
-    <menuitem action='EditPolaroid' />
-    <menuitem action='EditSepia' />
-    <menuitem action='EditDarkViolet' />
-    <menuitem action='EditLightGreen' />
-    <menuitem action='EditWhite' />
-    <menuitem action='EditGreen' />
-    <menuitem action='EditWatermark' /> 
-    <menuitem action='EditHistogram' /> 
-    <menuitem action='EditCrop' /> 
-    <menuitem action='EditLight' /> 
-    <menuitem action='EditSave' />
-  </popup>
+    <menu action="Effects">
+        <menuitem action='EditGreyScale' />
+        <menuitem action='EditSepia' />
+        <menuitem action='EditPolaroid' />
+        <menuitem action='EditAutocontrast' />
+        <menuitem action='EditSolarize' />
+        <menuitem action='EditEqualize' />
+        <menuitem action='EditDarkViolet' />
+        <menuitem action='EditLightGreen' />
+        <menuitem action='EditWhite' />
+        <menuitem action='EditGreen' />
+        <menuitem action='EditWatermark' /> 
+    </menu>  
+    <menu action="Edit">
+        <menuitem action='EditRotateLeft' />
+        <menuitem action='EditRotateRight' />
+        <menuitem action='EditMirror' />
+        <menuitem action='EditFlip' />
+        <menuitem action='EditCrop' />
+    </menu>
+    <menu action="Transform">
+        <menuitem action='EditSharpness' />
+        <menuitem action='EditDeform' />
+        <menuitem action='EditBordered' />
+        <menuitem action='EditUnbordered' />
+    </menu>
+    <menu action="Filter">
+        <menuitem action='EditBlur' />
+        <menuitem action='EditGaussian' /> 
+        <menuitem action='EditContour' />
+        <menuitem action='EditEdge' />
+        <menuitem action='EditEmboss' />
+        <menuitem action='EditSmooth' />
+        <menuitem action='EditSharpen' />
+    </menu>
+    <menu action="Color">
+        <menuitem action='EditColor' />
+        <menuitem action='EditColorize' /> 
+        <menuitem action='EditPosterize' />
+        <menuitem action='EditContrast' />
+    </menu>
+    <menu action="Light">
+        <menuitem action='EditInvert' />
+        <menuitem action='EditBrigthness' />
+        <menuitem action='EditLight' /> 
+    </menu>
+    <menu action="Other">
+        <menuitem action='EditOriginalSize' />
+        <menuitem action='EditHistogram' /> 
+        <menuitem action='EditSave' />
+    </menu>
+   </popup>
 </ui>
 """
 
@@ -223,6 +240,9 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_histogram_clicked":self.on_PhotoOrganizer_histogram_clicked,
                     "on_PhotoOrganizer_crop_clicked":self.on_PhotoOrganizer_crop_clicked,
                     "on_PhotoOrganizer_light_clicked":self.on_PhotoOrganizer_light_clicked,
+                    "on_PhotoOrganizer_gaussian_clicked":self.on_PhotoOrganizer_gaussian_clicked,
+                    "on_PhotoOrganizer_colorize_clicked":self.on_PhotoOrganizer_colorize_clicked,
+                    "on_PhotoOrganizer_flip_clicked":self.on_PhotoOrganizer_flip_clicked,        
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
         }
         #handler of GUI signals
@@ -247,12 +267,21 @@ class PhotoOrganizerGUI(Gtk.Window):
     
     def create_image_context_menu(self):
         action_group = Gtk.ActionGroup("my_actions")
-        action_group.add_actions([                   
+        action_group.add_actions([     
+            ("Effects", Gtk.STOCK_ZOOM_FIT, "Effects", "<control><alt>O", None,None), 
+            ("Edit", Gtk.STOCK_ZOOM_FIT, "Edit", "<control><alt>O", None,None),      
+            ("Transform", Gtk.STOCK_ZOOM_FIT, "Transform", "<control><alt>O", None,None), 
+            ("Filter", Gtk.STOCK_ZOOM_FIT, "Filter", "<control><alt>O", None,None),  
+            ("Color", Gtk.STOCK_ZOOM_FIT, "Color", "<control><alt>O", None,None), 
+            ("Light", Gtk.STOCK_ZOOM_FIT, "Light", "<control><alt>O", None,None), 
+            ("Other", Gtk.STOCK_ZOOM_FIT, "Other", "<control><alt>O", None,None),        
             ("EditOriginalSize", Gtk.STOCK_ZOOM_FIT, "Original size", "<control><alt>O", None,
              self.on_PhotoOrganizer_original_size_clicked),
             ("EditMirror", Gtk.STOCK_OK, "Mirror", "<control><alt>M", None,
              self.on_PhotoOrganizer_mirror_clicked),
-            ("EditRotate", Gtk.STOCK_REFRESH, "Rotate left", "<control><alt>R", None,
+            ("EditFlip", Gtk.STOCK_OK, "Flip", "<control><alt>M", None,
+             self.on_PhotoOrganizer_flip_clicked),
+            ("EditRotateLeft", Gtk.STOCK_REFRESH, "Rotate left", "<control><alt>R", None,
              self.on_PhotoOrganizer_rotate_clicked),
             ("EditRotateRight", Gtk.STOCK_REFRESH, "Rotate right", "<control><alt>Q", None,
              self.on_PhotoOrganizer_rotate_right_clicked),
@@ -313,7 +342,11 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditCrop", Gtk.STOCK_OK, "Crop", "<control><alt>Z", None,
              self.on_PhotoOrganizer_crop_clicked),  
             ("EditLight", Gtk.STOCK_OK, "Light", "<control><alt>Z", None,
-             self.on_PhotoOrganizer_light_clicked),                                                                                      
+             self.on_PhotoOrganizer_light_clicked),         
+            ("EditGaussian", Gtk.STOCK_OK, "Gaussian", "<control><alt>G", None,
+             self.on_PhotoOrganizer_gaussian_clicked),   
+            ("EditColorize", Gtk.STOCK_OK, "Colorize", "<control><alt>U", None,
+             self.on_PhotoOrganizer_colorize_clicked),                                                                                                                                  
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked)                                             
         ])
@@ -475,7 +508,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         
     def on_PhotoOrganizer_border_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
-        self.imageOpened.set_from_pixbuf(photoEffects.apply_border(pixbuf)) 
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_border(pixbuf,5,'red')) 
     
     def on_PhotoOrganizer_unborder_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
@@ -483,7 +516,7 @@ class PhotoOrganizerGUI(Gtk.Window):
     
     def on_PhotoOrganizer_autocontrast_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()   
-        self.imageOpened.set_from_pixbuf(photoEffects.apply_autocontrast(pixbuf)) 
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_autocontrast(pixbuf,0)) 
         
     def on_PhotoOrganizer_deform_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
@@ -504,7 +537,11 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_mirror_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_mirror(pixbuf))
-         
+    
+    def on_PhotoOrganizer_flip_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_flip(pixbuf))
+              
     def on_PhotoOrganizer_darkViolet_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_darkViolet(pixbuf))  
@@ -523,11 +560,11 @@ class PhotoOrganizerGUI(Gtk.Window):
             
     def on_PhotoOrganizer_posterize_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
-        self.imageOpened.set_from_pixbuf(photoEffects.apply_posterize(pixbuf))
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_posterize(pixbuf,4))
     
     def on_PhotoOrganizer_solarize_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
-        self.imageOpened.set_from_pixbuf(photoEffects.apply_solarize(pixbuf))
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_solarize(pixbuf,128))
     
     def on_PhotoOrganizer_blur_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
@@ -588,6 +625,14 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_light_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_light(pixbuf))  
+        
+    def on_PhotoOrganizer_gaussian_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_gaussian_blur(pixbuf,10))
+        
+    def on_PhotoOrganizer_colorize_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_colorize(pixbuf,"#000099","#99CCFF"))     
 
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))

@@ -6,132 +6,154 @@ Created on Mar 21, 2013
 @author: hifly
 '''
 
-
 import StringIO
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
 from PIL import Image,ImageOps,ImageFilter,ImageEnhance,ImageDraw,ImageFont
+
+#constants
+RGB = "RGB"
+IMAGE_MODE_L = "L"
+MAX_VALUE_COLOR = 255
+SEPIA_RGB = (255, 240, 192)
+
+class CustomGuassianBlur(ImageFilter.Filter):
+    def __init__(self, radius=5):
+        self.radius = radius
+    
+    def filter(self, image):
+        return image.gaussian_blur(self.radius)
 
 class BasicDeformer:
     def getmesh(self, im):
         x, y = im.size
         return [((0, 0, x, y), (0, 0, x, 0, x, y, y, 0))]
 
-def apply_autocontrast(pixbuf):
-    width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.autocontrast(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,cutoff=0)
-    return fromImageToPixbuf(y)
-
 def apply_deformer(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     deformer = BasicDeformer()
-    y = ImageOps.deform(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,deformer)
+    y = ImageOps.deform(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ) ,deformer)
     return fromImageToPixbuf(y)
 
 def apply_equalizer(pixbuf):    
+    '''
+    creates a uniform distribution of grayscale values in the output image
+    '''
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.equalize(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
+    y = ImageOps.equalize(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ))
     return fromImageToPixbuf(y)
 
-def apply_greyscale(pixbuf):    
+def apply_greyscale(pixbuf):  
+    '''
+    image to grayscale
+    '''  
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
-    y = y.convert('L')
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
+    y = y.convert(IMAGE_MODE_L)
     return fromImageToPixbuf(y)
 
 def apply_sepia(pixbuf):    
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
-    y = y.convert('L')
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
+    y = y.convert(IMAGE_MODE_L)
     y = ImageOps.autocontrast(y)
     sepia = []
-    r,g,b = (255, 240, 192)
-    for value in range(255):
-        sepia.extend((r*value/255, g*value/255, b*value/255))
+    r,g,b = SEPIA_RGB
+    for value in range(MAX_VALUE_COLOR):
+        sepia.extend((r*value/MAX_VALUE_COLOR, g*value/MAX_VALUE_COLOR, b*value/MAX_VALUE_COLOR))
     y.putpalette(sepia)
-    y = y.convert("RGB")
+    y = y.convert(RGB)
     return fromImageToPixbuf(y)
 
 def apply_invert(pixbuf):
+    '''
+    negative of an image (darkest-->lightest | lightest-->darkest)
+    '''
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.invert(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
+    y = ImageOps.invert(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ))
     return fromImageToPixbuf(y)
 
 def apply_mirror(pixbuf):
+    '''
+    image left to right
+    '''
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.mirror(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
+    y = ImageOps.mirror(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ))
     return fromImageToPixbuf(y)
 
-def apply_solarize(pixbuf):
+def apply_flip(pixbuf):
+    '''
+    image top to bottom
+    '''
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.solarize(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ))
+    y = ImageOps.flip(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ))
     return fromImageToPixbuf(y)
 
 def apply_blur(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.BLUR)
     return fromImageToPixbuf(y)
 
 def apply_contour(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.CONTOUR)
     return fromImageToPixbuf(y)
 
 def apply_edge(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.FIND_EDGES)
     return fromImageToPixbuf(y)
 
 def apply_emboss(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.EMBOSS)
     return fromImageToPixbuf(y)
 
 def apply_smooth(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.SMOOTH)
     return fromImageToPixbuf(y)
 
 def apply_sharpen(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     y = y.filter(ImageFilter.SHARPEN)
     return fromImageToPixbuf(y)
 
 def apply_darkViolet(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     r,g,b = y.split()
-    y = Image.merge('RGB',(r,r,b))
+    y = Image.merge(RGB,(r,r,b))
     return fromImageToPixbuf(y)
 
 def apply_lightGreen(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     r,g,b = y.split()
-    y = Image.merge('RGB',(g,b,g))
+    y = Image.merge(RGB,(g,b,g))
     return fromImageToPixbuf(y)
 
 def apply_white(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     r,g,b = y.split()
-    y = Image.merge('RGB',(b,b,r))
+    y = Image.merge(RGB,(b,b,r))
     return fromImageToPixbuf(y)
 
 def apply_green(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     r,g,b = y.split()
-    y = Image.merge('RGB',(b,g,g))
+    y = Image.merge(RGB,(b,g,g))
     return fromImageToPixbuf(y)
 
 def apply_light(pixbuf,tilesize=50):
-    print "TODO"
+    #TODO
     return pixbuf
 
 def apply_polaroid(pixbuf,imageText):
@@ -141,7 +163,7 @@ def apply_polaroid(pixbuf,imageText):
     imgModified = Image.open('images/frame.jpg')
     #cropped image to the requested framesize
     imgModified = ImageOps.fit(imgModified, frameSize, Image.ANTIALIAS, 0, (0.5,0.5))
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels()) 
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels()) 
     #cropped image to the requested size
     y = ImageOps.fit(y, imageOutputSize, Image.ANTIALIAS, 0, (0.5,0.5))
     y = ImageOps.autocontrast(y, cutoff=2)
@@ -161,28 +183,51 @@ def apply_polaroid(pixbuf,imageText):
     return fromImageToPixbuf(imgOutput)
 
 '''
-Effect based on a range of values --> brightness,contrast
+Effect based on a range of values
 '''
 
-def apply_border(pixbuf):
+def apply_solarize(pixbuf,threshold):
+    '''
+    inverts all the pixel under the threshold
+    '''
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.expand(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ) ,border=5,fill='red')
+    y = ImageOps.solarize(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ),threshold)
+    return fromImageToPixbuf(y)
+
+def apply_autocontrast(pixbuf,cutoff):
+    '''
+    autoconstrast removes cutoff % of lightest and darkest pixels and then
+    remaps the image so the darkest pixel becomes black and the lightest white
+    '''
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = ImageOps.autocontrast(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ) ,cutoff)
+    return fromImageToPixbuf(y)
+
+def apply_border(pixbuf,borderSize,borderColor):
+    '''
+    adds a border at all four edges
+    '''
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = ImageOps.expand(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ) ,border=borderSize,fill=borderColor)
     return fromImageToPixbuf(y)
 
 def apply_unborder(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.crop(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ),1)
+    y = ImageOps.crop(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ),1)
     return fromImageToPixbuf(y)
 
-def apply_posterize(pixbuf):
+def apply_posterize(pixbuf,bitsReduction):
+    '''
+    for each color channel reduces the number of bits
+    '''
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = ImageOps.posterize(Image.fromstring("RGB",(width,height),pixbuf.get_pixels() ),4)
+    y = ImageOps.posterize(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ),bitsReduction)
     return fromImageToPixbuf(y)
 
 def apply_brightness(pixbuf,brightness=3.0):
     #0.0 black - 1.0 leaves image unchanged
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     enhancer = ImageEnhance.Brightness(y)
     y = enhancer.enhance(brightness)
     return fromImageToPixbuf(y)
@@ -190,7 +235,7 @@ def apply_brightness(pixbuf,brightness=3.0):
 def apply_contrast(pixbuf,contrast=1.3):
     #0.0 solid grey image - 1.0 leaves image unchanged
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     enhancer = ImageEnhance.Contrast(y)
     y = enhancer.enhance(contrast)
     return fromImageToPixbuf(y)
@@ -198,7 +243,7 @@ def apply_contrast(pixbuf,contrast=1.3):
 def apply_sharpness(pixbuf,sharpness=2.0):
     #0.0 blurred image - 1.0 leaves image unchanged - 2.0 sharpened image
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     enhancer = ImageEnhance.Sharpness(y)
     y = enhancer.enhance(sharpness)
     return fromImageToPixbuf(y)
@@ -206,14 +251,32 @@ def apply_sharpness(pixbuf,sharpness=2.0):
 def apply_color(pixbuf,color=1.5):
     #0.0 black & white image - 1.0 leaves image unchanged -
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     enhancer = ImageEnhance.Color(y)
     y = enhancer.enhance(color)
     return fromImageToPixbuf(y)
 
+def apply_gaussian_blur(pixbuf,radius):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
+    y = y.filter(CustomGuassianBlur(radius))
+    return fromImageToPixbuf(y)
+
+def apply_colorize(pixbuf,colorSubForBlack,colorSubForWhite):
+    '''
+    colorize is applied to a grayscale image and substitutes all the black pixels with the
+    color specified in colorSubForBlack and the white pixels with the color specified in colorSubForWhite
+    '''
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
+    #must be converted to grayscale
+    y = ImageOps.grayscale(y)
+    y = ImageOps.colorize(y, colorSubForBlack, colorSubForWhite)
+    return fromImageToPixbuf(y)
+
 def apply_watermarkSignature(pixbuf,textSignature="text",inputFont="/usr/share/fonts/liberation/LiberationMono-Regular.ttf",rotation=25, opacity=0.25):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     textImage = Image.new('RGBA', y.size, (0,0,0,0))
     fontSize = 2
     fontImage = ImageFont.truetype(inputFont, fontSize)
@@ -250,7 +313,7 @@ def scaleImageFromPixbuf(pixbuf):
 
 def createImageHistogram(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
-    y = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     histogram = y.histogram()
     #create new image with histogram
     histogramImage = Image.new("RGBA", (300, 200))   
@@ -280,8 +343,8 @@ def createImageHistogram(pixbuf):
     return fromImageToPixbuf(histogramImage)
 
 def fromImageToPixbuf(y):
-    if y.mode != 'RGB':         
-        y = y.convert('RGB')
+    if y.mode != RGB:         
+        y = y.convert(RGB)
     buff = StringIO.StringIO()
     y.save(buff, 'ppm')
     contents = buff.getvalue()
