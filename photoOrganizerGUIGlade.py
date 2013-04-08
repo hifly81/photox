@@ -66,6 +66,7 @@ UI_INFO = """
         <menuitem action='EditMirror' />
         <menuitem action='EditFlip' />
         <menuitem action='EditCrop' />
+        <menuitem action='EditResize' />
     </menu>
     <menu action="Transform">
         <menuitem action='EditSharpness' />
@@ -96,6 +97,7 @@ UI_INFO = """
     <menu action="Other">
         <menuitem action='EditOriginalSize' />
         <menuitem action='EditHistogram' /> 
+        <menuitem action='EditGrab' /> 
         <menuitem action='EditSave' />
     </menu>
    </popup>
@@ -244,6 +246,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_colorize_clicked":self.on_PhotoOrganizer_colorize_clicked,
                     "on_PhotoOrganizer_flip_clicked":self.on_PhotoOrganizer_flip_clicked,        
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
+                    "on_PhotoOrganizer_frame_clicked":self.on_PhotoOrganizer_frame_clicked,
         }
         #handler of GUI signals
         self.builder.connect_signals(handlers)
@@ -348,7 +351,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditColorize", Gtk.STOCK_OK, "Colorize", "<control><alt>U", None,
              self.on_PhotoOrganizer_colorize_clicked),                                                                                                                                  
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
-             self.on_PhotoOrganizer_save_clicked)                                             
+             self.on_PhotoOrganizer_save_clicked)                                          
         ])
         uimanager = Gtk.UIManager()
         # Throws exception if something went wrong
@@ -632,7 +635,11 @@ class PhotoOrganizerGUI(Gtk.Window):
         
     def on_PhotoOrganizer_colorize_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
-        self.imageOpened.set_from_pixbuf(photoEffects.apply_colorize(pixbuf,"#000099","#99CCFF"))     
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_colorize(pixbuf,"#000099","#99CCFF"))    
+    
+    def on_PhotoOrganizer_frame_clicked(self, widget):
+        pixbuf = self.imageOpened.get_pixbuf()
+        self.imageOpened.set_from_pixbuf(photoEffects.apply_frame(pixbuf)) 
 
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
@@ -668,7 +675,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             if(self.twitterSearch):
                 photoOrganizerUtil.savePhotoFromUrl(self.lastTwitterImageUrl,filename)
             else:
-                photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(),"jpeg",100,filename);
+                #should pass the quality
+                outputExt = filename[filename.index('.')+1:]
+                photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(),outputExt,100,filename);
         else:
             dialog.destroy()
            
@@ -711,6 +720,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         pixbuf = self.imageOpened.get_pixbuf()
         width,height = pixbuf.get_width(),pixbuf.get_height() 
         self.imageForDrawing = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+        self.imageForDrawingStart = True
         self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.POINTER_MOTION_MASK) 
         self.darea.connect("draw", self.on_drawing_area_draw)
         self.darea.connect("button-press-event", self.on_drawing_area_button_press)
@@ -718,16 +728,20 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.darea.connect("motion_notify_event", self.on_drawing_area_button_move) 
         self.add(self.darea)
         self.darea.show()
-        imagePanel.add(self.darea)
+        imagePanel.add_with_viewport(self.darea)
         imagePanel.show_all()
     
     def on_drawing_area_draw(self, wid, cr):
-        buffer = StringIO.StringIO()
-        self.image = self.imageForDrawing
-        self.image.save(buffer, format="PNG")
-        buffer.seek(0)
+        #the image cannot be loaded every time --> repaint
+        if self.imageForDrawingStart == True:
+            self.buffer = StringIO.StringIO()
+            self.image = self.imageForDrawing
+            self.imageForDrawingStart = False
+            self.image.save(self.buffer, format="PNG")
+            
+        self.buffer.seek(0)
         cr.save()
-        iss = ImageSurface.create_from_png(buffer)
+        iss = ImageSurface.create_from_png(self.buffer)
         cr.set_source_surface(iss)
         cr.paint()
         cr.restore()
@@ -764,11 +778,11 @@ class PhotoOrganizerGUI(Gtk.Window):
             cr.rectangle(0, 0, 1024, 768)
             cr.fill() 
         
-            buffer = StringIO.StringIO()
-            self.image.save(buffer, format="PNG")
-            buffer.seek(0)
+            self.buffer = StringIO.StringIO()
+            self.image.save(self.buffer, format="PNG")
+            self.buffer.seek(0)
             cr.save()
-            iss = ImageSurface.create_from_png(buffer)
+            iss = ImageSurface.create_from_png(self.buffer)
 
             cr.set_source_surface(iss)
             cr.paint()
@@ -832,7 +846,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
             
         # scale the image          
-        scaled_buf = photoEffects.scaleImageFromPixbuf(pixbuf)
+        scaled_buf = photoEffects.scaleImageFromPixbuf(pixbuf,GdkPixbuf.InterpType.HYPER)
         pimage.set_from_pixbuf(scaled_buf)
         self.imagePathOpened = imagePath
         self.createImagePanel(pimage,imagePath)
@@ -879,7 +893,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.imageOpened = pimage
         eventBox.connect("button_press_event",self.on_PhotoOrganizer_image_contextmenu_event)
         pimage.show()
-        imagePanel.add(eventBox)
+        imagePanel.add_with_viewport(eventBox)
         imagePanel.show_all()
 
     def createThubnailPanel(self,imagePath):
@@ -1035,7 +1049,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                 #set current tab
                 self.builder.get_object("notebook1").set_current_page(0)
                 leftPanel = self.builder.get_object("leftPanel")
-                leftPanel.add(treeview)
+                leftPanel.add_with_viewport(treeview)
                 leftPanel.show_all()
                 self.twitterSearch = False
                 

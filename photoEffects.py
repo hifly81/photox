@@ -156,6 +156,16 @@ def apply_light(pixbuf,tilesize=50):
     #TODO
     return pixbuf
 
+def apply_frame(pixbuf):
+    '''
+    adds a border at all four edges
+    '''
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = ImageOps.expand(Image.fromstring(RGB,(width,height),pixbuf.get_pixels() ) ,border=22,fill='black')
+    y = ImageOps.expand(y ,border=42,fill='silver')
+    y = ImageOps.expand(y ,border=4,fill='black')
+    return fromImageToPixbuf(y)
+
 def apply_polaroid(pixbuf,imageText):
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     frameSize = (300,320)  
@@ -225,7 +235,7 @@ def apply_posterize(pixbuf,bitsReduction):
     return fromImageToPixbuf(y)
 
 def apply_brightness(pixbuf,brightness=3.0):
-    #0.0 black - 1.0 leaves image unchanged
+    #0.0 black - 0.0 <= value <1.0 darker - 1.0 leaves image unchanged - >1.0 lighter
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     enhancer = ImageEnhance.Brightness(y)
@@ -295,7 +305,7 @@ def apply_watermarkSignature(pixbuf,textSignature="text",inputFont="/usr/share/f
     textImage.putalpha(splittedImage)
     return fromImageToPixbuf(Image.composite(textImage, y, textImage))
 
-def scaleImageFromPixbuf(pixbuf):
+def scaleImageFromPixbuf(pixbuf,interpType):
     orig_width =  pixbuf.get_width()
     orig_height = pixbuf.get_height()
     if orig_width >= orig_height:
@@ -308,7 +318,14 @@ def scaleImageFromPixbuf(pixbuf):
             orig_width = 600
         if orig_height > 700:
             orig_height = 700
-    scaled_buf = pixbuf.scale_simple(orig_width,orig_height,GdkPixbuf.InterpType.BILINEAR)
+    '''
+    filter could be applied (increasing order of quality):
+        - NEAREST
+        - TILES
+        - BILINEAR
+        - HYPER
+    '''
+    scaled_buf = pixbuf.scale_simple(orig_width,orig_height,interpType)
     return scaled_buf
 
 def createImageHistogram(pixbuf):
