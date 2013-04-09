@@ -12,10 +12,11 @@ import sys
 import os
 
 class PhotoOrganizerPref:
-  def __init__(self,hiddenFolders,lastSearch,albumCollection):
+  def __init__(self,hiddenFolders,lastSearch,albumCollection,peopleTag):
     self.hiddenFolders = hiddenFolders  
     self.lastSearch = lastSearch
     self.albumCollection = albumCollection
+    self.peopleTag = peopleTag
 
 def savePref(photoOrganizerPref):
     data = []

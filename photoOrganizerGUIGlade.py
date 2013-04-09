@@ -7,7 +7,6 @@ Created on Mar 01, 2013
 
 '''
 
-
 import os
 import math
 import urllib2
@@ -20,12 +19,14 @@ import StringIO
 import Image
 import imghdr
 import threading
+from transparentWindow import TransparentWindow
 from cairo import ImageSurface 
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject,GLib
 from photoOrganizerStorage import PhotoOrganizerPref
 from photoOrganizerUtil import AlbumCollection
 from photoOrganizerUtil import Album
 from photoOrganizerUtil import PhotoFile
+from photoOrganizerUtil import PeopleTag
 
 #logging conf
 logging.config.fileConfig('config/logging.conf')
@@ -93,6 +94,9 @@ UI_INFO = """
         <menuitem action='EditInvert' />
         <menuitem action='EditBrigthness' />
         <menuitem action='EditLight' /> 
+    </menu>
+    <menu action="People">
+        <menuitem action='EditTagPeople' />
     </menu>
     <menu action="Other">
         <menuitem action='EditOriginalSize' />
@@ -247,6 +251,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_flip_clicked":self.on_PhotoOrganizer_flip_clicked,        
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
                     "on_PhotoOrganizer_frame_clicked":self.on_PhotoOrganizer_frame_clicked,
+                    "on_PhotoOrganizer_tagPeople_clicked":self.on_PhotoOrganizer_tagPeople_clicked,
         }
         #handler of GUI signals
         self.builder.connect_signals(handlers)
@@ -351,7 +356,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditColorize", Gtk.STOCK_OK, "Colorize", "<control><alt>U", None,
              self.on_PhotoOrganizer_colorize_clicked),                                                                                                                                  
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
-             self.on_PhotoOrganizer_save_clicked)                                          
+             self.on_PhotoOrganizer_save_clicked),
+            ("EditTagPeople", Gtk.STOCK_SAVE, "TagPeople", "<control><alt>S", None,
+             self.on_PhotoOrganizer_tagPeople_clicked),                                                         
         ])
         uimanager = Gtk.UIManager()
         # Throws exception if something went wrong
@@ -371,7 +378,8 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_delete_event  (self, *args):
         if(self.lastAlbumCollectionScanned is not None):
             #save the preferences
-            photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text,self.lastAlbumCollectionScanned)
+            peopleTag = self.photoOrganizerPref.peopleTag
+            photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text,self.lastAlbumCollectionScanned,peopleTag)
             photoOrganizerStorage.savePref(photoFile)
         Gtk.main_quit()
     
@@ -426,7 +434,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             
                     self.twitterCurrentQuery = queryToSend
                     treeview = self.builder.get_object("treeviewTwitter")
-                    self.createFixedPhotoTree(albumCollection,treeview)
+                    self.createFixedPhotoTree(albumCollection,None,treeview)
                     #set current tab
                     self.builder.get_object("notebook1").set_current_page(1)
                     leftPanel = self.builder.get_object("leftPanel1")
@@ -707,6 +715,92 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.winImage.move(x, y1)
         self.winImage.show_all() 
     
+    def on_PhotoOrganizer_tagPeople_clicked(self,widget):    
+        imagePanel = self.builder.get_object("imagePanel")
+        try:
+            imagePanel.remove(imagePanel.get_children()[0])
+        except:
+            pass
+        self.coords = []
+        self.darea = Gtk.DrawingArea()
+        pixbuf = self.imageOpened.get_pixbuf()
+        width,height = pixbuf.get_width(),pixbuf.get_height() 
+        self.imageForDrawing = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+        self.imageForDrawingStart = True
+        self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK) 
+        self.darea.connect("draw", self.on_drawing_area_tagPeople_draw)
+        self.darea.connect("button-press-event", self.on_drawing_area_tagPeople_button_press)
+        #set the cursor for tagging
+        cross_cursor = Gdk.Cursor(Gdk.CursorType.CROSSHAIR)
+        imagePanel.get_window().set_cursor(cross_cursor)
+        self.add(self.darea)
+        self.darea.show()
+        imagePanel.add_with_viewport(self.darea)
+        imagePanel.show_all()
+    
+    def on_drawing_area_tagPeople_draw(self, wid, cr):
+        #the image cannot be loaded every time --> repaint
+        if self.imageForDrawingStart == True:
+            self.buffer = StringIO.StringIO()
+            self.image = self.imageForDrawing
+            self.imageForDrawingStart = False
+            self.image.save(self.buffer, format="PNG")
+            
+        self.buffer.seek(0)
+        cr.save()
+        iss = ImageSurface.create_from_png(self.buffer)
+        cr.set_source_surface(iss)
+        cr.paint()
+        cr.restore()
+    
+    def on_drawing_area_tagPeople_button_press(self, w, e):
+        if e.type == Gdk.EventType.BUTTON_PRESS and e.button == 1:
+            self.twin = TransparentWindow()
+            box = Gtk.Box()
+            self.tagPeopleEntry = Gtk.Entry()
+            self.tagPeopleEntry .connect("key-press-event", self.on_drawing_area_tagPeople_entry_keypress)
+            box.add(self.tagPeopleEntry )
+            self.twin.add(box)
+            self.twin.show_all()
+            
+            
+    def on_drawing_area_tagPeople_entry_keypress(self,widget,event):
+        keyname = Gdk.keyval_name(event.keyval)
+        if keyname == "Return":
+            tagPeopleEntry = self.tagPeopleEntry.get_text()
+            #set tooltip
+            self.imageOpened.set_tooltip_text(tagPeopleEntry)
+            #close transparent window
+            self.twin.destroy()
+            
+            #split on white space
+            splitString = tagPeopleEntry.split()
+            #add the tag to the photo organizer pref
+            if self.photoOrganizerPref.peopleTag is None:
+                self.photoOrganizerPref.peopleTag = {}
+                self.photoOrganizerPref.peopleTag[tagPeopleEntry] = []
+                peopleTag = PeopleTag()
+                peopleTag.totalPics = 1
+                peopleTag.name = splitString[0]
+                peopleTag.pics = []
+                peopleTag.pics.append(self.currentPhoto)
+                self.photoOrganizerPref.peopleTag[tagPeopleEntry] = peopleTag
+            else:
+                if tagPeopleEntry in self.photoOrganizerPref.peopleTag:
+                    peopleTag = self.photoOrganizerPref.peopleTag[tagPeopleEntry]
+                    peopleTag.totalPics = peopleTag.totalPics+1
+                    peopleTag.pics.append(self.currentPhoto)
+                else:
+                    self.photoOrganizerPref.peopleTag[tagPeopleEntry] = []
+                    peopleTag = PeopleTag()
+                    peopleTag.totalPics = 1
+                    peopleTag.name = splitString[0]
+                    peopleTag.pics = []
+                    peopleTag.pics.append(self.currentPhoto)
+                    self.photoOrganizerPref.peopleTag[tagPeopleEntry] = peopleTag
+            
+
+    
     def on_PhotoOrganizer_crop_clicked(self,widget):    
         imagePanel = self.builder.get_object("imagePanel")
         try:
@@ -863,22 +957,22 @@ class PhotoOrganizerGUI(Gtk.Window):
                     pass
         else:
             self.builder.get_object("detailsEntry").get_buffer().set_text("")
-            currentPhoto = totalPhotoDictionary[imagePath]
+            self.currentPhoto = totalPhotoDictionary[imagePath]
             gpsText = "\ntaken at:"
             dateText = "date:"
             authorText = "\nby:"
             descText = "\ndescription:"
             modelText = "\ncamera:"
-            if currentPhoto.date:
-                dateText = dateText+currentPhoto.date
-            if currentPhoto.description:
-                descText = descText+currentPhoto.description
-            if currentPhoto.author:
-                authorText = authorText+currentPhoto.author
-            if currentPhoto.brand:
-                modelText = modelText+str(currentPhoto.brand)+","+str(currentPhoto.model)
-            if currentPhoto.latitude:
-                gpsText = gpsText+str(currentPhoto.latitude)+","+str(currentPhoto.longitude)
+            if self.currentPhoto.date:
+                dateText = dateText+self.currentPhoto.date
+            if self.currentPhoto.description:
+                descText = descText+self.currentPhoto.description
+            if self.currentPhoto.author:
+                authorText = authorText+self.currentPhoto.author
+            if self.currentPhoto.brand:
+                modelText = modelText+str(self.currentPhoto.brand)+","+str(self.currentPhoto.model)
+            if self.currentPhoto.latitude:
+                gpsText = gpsText+str(self.currentPhoto.latitude)+","+str(self.currentPhoto.longitude)
             self.builder.get_object("detailsEntry").get_buffer().set_text(dateText+descText+authorText+modelText+gpsText)
     
     def createImagePanel(self,pimage,imageName):    
@@ -999,7 +1093,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.on_PhotoOrganizer_search_error_event() 
     
     #create the main panel with a tree
-    def createFixedPhotoTree(self,albumCollection,treeview):
+    def createFixedPhotoTree(self,albumCollection,peopleTag,treeview):
         # create the treestore; the model has one column of type string
         treestore = Gtk.TreeStore(str)
         for album in albumCollection.albums:
@@ -1009,7 +1103,17 @@ class PhotoOrganizerGUI(Gtk.Window):
             for photo in album.pics:
                 subImageMap[photo.fileName] = photo
                 treestore.append(piter, ['%s' %album.title+"/"+photo.fileName])
-            imageMap[album.title] = subImageMap        
+            imageMap[album.title] = subImageMap  
+        
+        piter = treestore.append(None, [""])
+        piter = treestore.append(None, ["Tags"])
+        #add people tags
+        if peopleTag is not None:
+            for key in peopleTag:
+                piter2 = treestore.append(piter, ['%s' % key])
+                for pic in peopleTag[key].pics:
+                    treestore.append(piter2, ['%s' %pic.dirName+"/"+pic.fileName])
+              
         treeview.set_model(treestore)
         albumNameCell = Gtk.CellRendererText()
         #build title tree string
@@ -1030,17 +1134,17 @@ class PhotoOrganizerGUI(Gtk.Window):
     
     def loadPreferences(self):
         #load preferences
-        photoOrganizerPref = photoOrganizerStorage.loadPref()
-        if(photoOrganizerPref!=None):
+        self.photoOrganizerPref = photoOrganizerStorage.loadPref()
+        if(self.photoOrganizerPref!=None):
             try:
                 #load album saved
-                self.hiddenFolders = photoOrganizerPref.hiddenFolders
-                self.entry_folder_text = photoOrganizerPref.lastSearch
+                self.hiddenFolders = self.photoOrganizerPref.hiddenFolders
+                self.entry_folder_text = self.photoOrganizerPref.lastSearch
                 treeview = self.builder.get_object("treeviewAlbum")
-                self.createFixedPhotoTree(photoOrganizerPref.albumCollection,treeview)
+                self.createFixedPhotoTree(self.photoOrganizerPref.albumCollection,self.photoOrganizerPref.peopleTag,treeview)
                 #rebuild photo indexes
-                self.lastAlbumCollectionScanned = photoOrganizerPref.albumCollection
-                savedAlbums = photoOrganizerPref.albumCollection
+                self.lastAlbumCollectionScanned = self.photoOrganizerPref.albumCollection
+                savedAlbums = self.photoOrganizerPref.albumCollection
                 for album in savedAlbums.albums:
                     for photo in album.pics:
                        totalPhotoDictionary[album.title+"/"+photo.fileName] = photo

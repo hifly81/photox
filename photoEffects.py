@@ -243,7 +243,7 @@ def apply_brightness(pixbuf,brightness=3.0):
     return fromImageToPixbuf(y)
 
 def apply_contrast(pixbuf,contrast=1.3):
-    #0.0 solid grey image - 1.0 leaves image unchanged
+    #0.0 solid grey,black image - 1.0 leaves image unchanged
     width,height = pixbuf.get_width(),pixbuf.get_height() 
     y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
     enhancer = ImageEnhance.Contrast(y)
@@ -308,7 +308,7 @@ def apply_watermarkSignature(pixbuf,textSignature="text",inputFont="/usr/share/f
 def scaleImageFromPixbuf(pixbuf,interpType):
     orig_width =  pixbuf.get_width()
     orig_height = pixbuf.get_height()
-    if orig_width >= orig_height:
+    '''if orig_width >= orig_height:
         if orig_width > 700:
             orig_width = 700
         if orig_height > 600:
@@ -318,6 +318,7 @@ def scaleImageFromPixbuf(pixbuf,interpType):
             orig_width = 600
         if orig_height > 700:
             orig_height = 700
+    '''
     '''
     filter could be applied (increasing order of quality):
         - NEAREST

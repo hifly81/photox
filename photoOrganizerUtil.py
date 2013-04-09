@@ -19,6 +19,13 @@ logging.config.fileConfig('config/logging.conf')
 logger = logging.getLogger('photoOrganizer')
 
 #class which stores img info
+class PeopleTag:
+  def __init__(self):
+    self.totalPics = None
+    self.name = None
+    self.surname = None
+    self.pics = []
+    
 class PhotoFile:
   def __init__(self):
     self.dirName = None  
@@ -35,10 +42,13 @@ class PhotoFile:
     self.latitude = None
     self.longitude = None
     self.copyright = None
+    #reference to people
+    self.people = []
 
 class Album:
   def __init__(self):
     self.totalPics = None
+    # path of the album
     self.title = None
     self.pics = []
 
@@ -48,6 +58,7 @@ class AlbumCollection:
     self.totalPics = None
     self.title = None
     self.albums = []
+    self.peopleTags = []
   
   #prints class info  
   def __str__(self):
@@ -86,7 +97,7 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                 albumCollection.albums.append(album) 
                 album.totalPics = len(album.pics)
                 
-                #add to tree
+                #add to tree --> album title
                 piter = treestore.append(None, ['%s' % album.title])
                 imageMap[album.title] = None
                 subImageMap = {}
