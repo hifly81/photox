@@ -49,6 +49,8 @@ class PhotoFile:
 
 class Album:
   def __init__(self):
+    self.year = None
+    self.month = None
     self.totalPics = None
     # path of the album
     self.title = None
@@ -70,6 +72,8 @@ class AlbumCollection:
 #scan dirs and searches for img
 def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,leftPanel):
     photoDictionary = {}
+    yearDictionary = {}
+    monthDictionary = {}
     dirPath = dirPath.strip('\n')
     totalPicsFound = 0
     albumCollection = AlbumCollection()
@@ -100,13 +104,32 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                         album.pics.append(photoFile)
                         totalPicsFound+=1 
                 except IOError:
-                    logger.error("IOERROR %s",filename)      
+                    logger.error("IOERROR %s",filename)  
+                    
+            #must set album date   
+            album.year =  albumDateTimeYear
+            album.month = albumDateTimeMonth
+            listYearValue = yearDictionary.get(album.year) 
+            if listYearValue is None:
+                piter = treestore.append(None, ['%s' % album.year])
+                while Gtk.events_pending():
+                    Gtk.main_iteration_do(False)
+                yearDictionary[album.year] = piter
+            
+            listMonthValue = monthDictionary.get(str(album.year)+"-"+str(album.month)) 
+            if listMonthValue is None:
+                piter = treestore.append(yearDictionary[album.year], ['%s' % album.month])
+                while Gtk.events_pending():
+                    Gtk.main_iteration_do(False)
+                monthDictionary[str(album.year)+"-"+str(album.month)] = piter
+            
             if len(album.pics) >0 :           
                 albumCollection.albums.append(album) 
                 album.totalPics = len(album.pics)
                 
                 #add to tree --> album title
-                piter = treestore.append(None, ['%s' % album.title])
+                #piter = treestore.append(None, ['%s' % album.year])
+                piter = treestore.append(monthDictionary[str(album.year)+"-"+str(album.month)], ['%s' % album.title])
                 imageMap[album.title] = None
                 subImageMap = {}
                 for photo in album.pics:

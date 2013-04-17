@@ -1111,10 +1111,28 @@ class PhotoOrganizerGUI(Gtk.Window):
     
     #create the main panel with a tree
     def createFixedPhotoTree(self,albumCollection,peopleTag,treeview):
+        yearDictionary = {}
+        monthDictionary = {}
         # create the treestore; the model has one column of type string
         treestore = Gtk.TreeStore(str)
         for album in albumCollection.albums:
-            piter = treestore.append(None, ['%s' % album.title])
+            
+            listYearValue = yearDictionary.get(album.year) 
+            if listYearValue is None:
+                piter = treestore.append(None, ['%s' % album.year])
+                while Gtk.events_pending():
+                    Gtk.main_iteration_do(False)
+                yearDictionary[album.year] = piter
+            
+            listMonthValue = monthDictionary.get(str(album.year)+"-"+str(album.month)) 
+            if listMonthValue is None:
+                piter = treestore.append(yearDictionary[album.year], ['%s' % album.month])
+                while Gtk.events_pending():
+                    Gtk.main_iteration_do(False)
+                monthDictionary[str(album.year)+"-"+str(album.month)] = piter
+            
+            
+            piter = treestore.append(monthDictionary[str(album.year)+"-"+str(album.month)], ['%s' % album.title])
             imageMap[album.title] = None
             subImageMap = {}
             for photo in album.pics:
@@ -1152,8 +1170,9 @@ class PhotoOrganizerGUI(Gtk.Window):
     def loadPreferences(self):
         #load preferences
         self.photoOrganizerPref = photoOrganizerStorage.loadPref()
-        self.peopleTag = self.photoOrganizerPref.peopleTag
+        self.peopleTag = None
         if(self.photoOrganizerPref!=None):
+            self.peopleTag = self.photoOrganizerPref.peopleTag
             try:
                 #load album saved
                 self.hiddenFolders = self.photoOrganizerPref.hiddenFolders
