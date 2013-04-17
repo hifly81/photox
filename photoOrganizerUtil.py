@@ -7,10 +7,12 @@ Created on Mar 21, 2013
 '''
 
 import os
+import time
 import urllib
 import imghdr
 import logging
 import logging.config
+from datetime import datetime
 from gi.repository import Gtk
 from PIL import Image
 from PIL.ExifTags import TAGS,GPSTAGS
@@ -80,6 +82,12 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
             album = Album()
             album.title = path
             for file in files:
+                #extract creation date
+                stringCreationDate = time.ctime(os.path.getctime(path+"/"+file))
+                albumDateTime = datetime.strptime(stringCreationDate, "%a %b %d %H:%M:%S %Y")
+                albumDateTimeYear = albumDateTime.year
+                albumDateTimeMonth = albumDateTime.strftime("%B")
+                albumDateTimeMonthNumber = albumDateTime.month
                 filename = os.path.join(path, file)
                 try:
                     if imghdr.what(filename)!=None:

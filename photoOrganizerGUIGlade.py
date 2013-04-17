@@ -20,6 +20,7 @@ import Image
 import imghdr
 import threading
 from transparentWindow import TransparentWindow
+from entryCompletion import EntryCompletion
 from cairo import ImageSurface 
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject,GLib
 from photoOrganizerStorage import PhotoOrganizerPref
@@ -205,6 +206,8 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.twitterCurrentQuery = None
         self.currenWinImage = None
         self.entry_folder_text = None
+        self.hiddenFolders = None
+        self.peopleTag = None
 
         #build GUI from glade
         self.builder = Gtk.Builder()
@@ -378,8 +381,7 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_delete_event  (self, *args):
         if(self.lastAlbumCollectionScanned is not None):
             #save the preferences
-            peopleTag = self.photoOrganizerPref.peopleTag
-            photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text,self.lastAlbumCollectionScanned,peopleTag)
+            photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text,self.lastAlbumCollectionScanned,self.peopleTag)
             photoOrganizerStorage.savePref(photoFile)
         Gtk.main_quit()
     
@@ -757,8 +759,12 @@ class PhotoOrganizerGUI(Gtk.Window):
         if e.type == Gdk.EventType.BUTTON_PRESS and e.button == 1:
             self.twin = TransparentWindow()
             box = Gtk.Box()
-            self.tagPeopleEntry = Gtk.Entry()
-            self.tagPeopleEntry .connect("key-press-event", self.on_drawing_area_tagPeople_entry_keypress)
+            self.tagPeopleEntry = EntryCompletion()
+            #add saved people tag
+            if self.peopleTag:
+                for key in self.peopleTag.keys():
+                    self.tagPeopleEntry.add_words([key])
+            self.tagPeopleEntry.connect("key-press-event", self.on_drawing_area_tagPeople_entry_keypress)
             box.add(self.tagPeopleEntry )
             self.twin.add(box)
             self.twin.show_all()
@@ -776,30 +782,39 @@ class PhotoOrganizerGUI(Gtk.Window):
             #split on white space
             splitString = tagPeopleEntry.split()
             #add the tag to the photo organizer pref
-            if self.photoOrganizerPref.peopleTag is None:
-                self.photoOrganizerPref.peopleTag = {}
-                self.photoOrganizerPref.peopleTag[tagPeopleEntry] = []
-                peopleTag = PeopleTag()
-                peopleTag.totalPics = 1
-                peopleTag.name = splitString[0]
-                peopleTag.pics = []
-                peopleTag.pics.append(self.currentPhoto)
-                self.photoOrganizerPref.peopleTag[tagPeopleEntry] = peopleTag
+            if self.peopleTag is None:
+                self.peopleTag = {}
+                self.peopleTag[tagPeopleEntry] = []
+                tag = PeopleTag()
+                tag.totalPics = 1
+                tag.name = splitString[0]
+                tag.pics = []
+                tag.pics.append(self.currentPhoto)
+                self.peopleTag[tagPeopleEntry] = tag
             else:
                 if tagPeopleEntry in self.photoOrganizerPref.peopleTag:
-                    peopleTag = self.photoOrganizerPref.peopleTag[tagPeopleEntry]
-                    peopleTag.totalPics = peopleTag.totalPics+1
-                    peopleTag.pics.append(self.currentPhoto)
+                    tag = self.peopleTag[tagPeopleEntry]
+                    tag.totalPics = self.peopleTag[tagPeopleEntry].totalPics+1
+                    tag.pics.append(self.currentPhoto)
                 else:
-                    self.photoOrganizerPref.peopleTag[tagPeopleEntry] = []
-                    peopleTag = PeopleTag()
-                    peopleTag.totalPics = 1
-                    peopleTag.name = splitString[0]
-                    peopleTag.pics = []
-                    peopleTag.pics.append(self.currentPhoto)
-                    self.photoOrganizerPref.peopleTag[tagPeopleEntry] = peopleTag
+                    self.peopleTag[tagPeopleEntry] = []
+                    tag = PeopleTag()
+                    tag.totalPics = 1
+                    tag.name = splitString[0]
+                    tag.pics = []
+                    tag.pics.append(self.currentPhoto)
+                    self.peopleTag[tagPeopleEntry] = tag
             
-
+            #need to add the tag to the current photo
+            self.currentPhoto.people.append(tagPeopleEntry)
+            #need to update alcum collection
+            for album in self.lastAlbumCollectionScanned.albums:
+                if album.title == self.currentPhoto.dirName:
+                    for pic in album.pics:
+                        if pic.dirName+"/"+ pic.fileName == self.currentPhoto.dirName+"/"+ self.currentPhoto.fileName:
+                            pic.people.append(tagPeopleEntry)
+                            break
+                    break
     
     def on_PhotoOrganizer_crop_clicked(self,widget):    
         imagePanel = self.builder.get_object("imagePanel")
@@ -957,6 +972,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     pass
         else:
             self.builder.get_object("detailsEntry").get_buffer().set_text("")
+            global totalPhotoDictionary 
             self.currentPhoto = totalPhotoDictionary[imagePath]
             gpsText = "\ntaken at:"
             dateText = "date:"
@@ -1080,6 +1096,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         # call retrieve album list
         albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,treeview,imageMap,leftPanel)
         self.lastAlbumCollectionScanned = albumCollection 
+        global totalPhotoDictionary 
         totalPhotoDictionary = photoDictionary
 
         if len(albumCollection.albums) >0:
@@ -1106,7 +1123,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             imageMap[album.title] = subImageMap  
         
         piter = treestore.append(None, [""])
-        piter = treestore.append(None, ["Tags"])
+        piter = treestore.append(None, ["People Tags"])
         #add people tags
         if peopleTag is not None:
             for key in peopleTag:
@@ -1135,6 +1152,7 @@ class PhotoOrganizerGUI(Gtk.Window):
     def loadPreferences(self):
         #load preferences
         self.photoOrganizerPref = photoOrganizerStorage.loadPref()
+        self.peopleTag = self.photoOrganizerPref.peopleTag
         if(self.photoOrganizerPref!=None):
             try:
                 #load album saved
