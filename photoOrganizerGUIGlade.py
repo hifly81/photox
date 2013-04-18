@@ -154,30 +154,38 @@ class UpdateAlbum(threading.Thread):
                             stringCreationDate = time.ctime(os.path.getctime(self.path+"/"+file))
                             picDateTime = datetime.strptime(stringCreationDate, "%a %b %d %H:%M:%S %Y")
                             picDateTimeYear = picDateTime.year
-                            picDateTimeMonth = picDateTime.strftime("%B")
-                            #check if there ia a containing year
+                            #check if there is a containing year
                             if str(picDateTimeYear) in rowValue:
                                 #should add to the treeiter
                                 iterPath = Gtk.TreePath(rowIndex)
                                 treeiter = self.treestore.get_iter(iterPath)
-                                self.treestore.append(treeiter,['%s' %self.path+"/"+file])
-                                self.statusBar.push(self.context,"added:"+self.path+"/"+file)
-                                while Gtk.events_pending():
-                                    Gtk.main_iteration_do(False)
-                                photoFile = photoOrganizerUtil.get_exif_data(self.path+"/"+file)
-                                if photoFile==None:
-                                    photoFile = PhotoFile()  
-                                photoFile.dirName = path
-                                photoFile.fileName = file
-                                photoFile.shortName = photoFile.fileName
-                                #add to original album
-                                self.album.pics.append(photoFile)
-                                #add to dic
-                                totalPhotoDictionary[self.path+"/"+file] = photoFile
-                                #update imageMap
-                                subImageMap = {}
-                                subImageMap[photoFile.fileName] = photoFile
-                                imageMap[self.path].update(subImageMap)
+                                treeiterChild = self.treestore.iter_children(treeiter)
+                                while treeiterChild is not None:
+                                    treeiter2Child = self.treestore.iter_children(treeiterChild)
+                                    while treeiter2Child is not None:
+                                        treeiter2ChildValue = self.treestore[treeiter2Child][:]
+                                        if self.path in treeiter2ChildValue:
+                                            self.treestore.append(treeiter2Child,['%s' %self.path+"/"+file])
+                                            self.statusBar.push(self.context,"added:"+self.path+"/"+file)
+                                            while Gtk.events_pending():
+                                                Gtk.main_iteration_do(False)
+                                            photoFile = photoOrganizerUtil.get_exif_data(self.path+"/"+file)
+                                            if photoFile==None:
+                                                photoFile = PhotoFile()  
+                                            photoFile.dirName = path
+                                            photoFile.fileName = file
+                                            photoFile.shortName = photoFile.fileName
+                                            #add to original album
+                                            self.album.pics.append(photoFile)
+                                            #add to dic
+                                            totalPhotoDictionary[self.path+"/"+file] = photoFile
+                                            #update imageMap
+                                            subImageMap = {}
+                                            subImageMap[photoFile.fileName] = photoFile
+                                            imageMap[self.path].update(subImageMap)
+                                        treeiter2Child = self.treestore.iter_next(treeiter2Child)
+                                        
+                                    treeiterChild = self.treestore.iter_next(treeiterChild)
                             rowIndex+=1
         
         listIndex = 0
