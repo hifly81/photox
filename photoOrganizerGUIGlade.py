@@ -8,6 +8,7 @@ Created on Mar 01, 2013
 '''
 
 import os
+import time
 import math
 import urllib2
 import logging.config
@@ -19,6 +20,7 @@ import StringIO
 import Image
 import imghdr
 import threading
+from datetime import datetime
 from transparentWindow import TransparentWindow
 from entryCompletion import EntryCompletion
 from cairo import ImageSurface 
@@ -148,7 +150,13 @@ class UpdateAlbum(threading.Thread):
                         for row in self.treestore:
                             # Print values of all columns
                             rowValue = row[:]
-                            if self.path in rowValue:
+                            #get pic year
+                            stringCreationDate = time.ctime(os.path.getctime(self.path+"/"+file))
+                            picDateTime = datetime.strptime(stringCreationDate, "%a %b %d %H:%M:%S %Y")
+                            picDateTimeYear = picDateTime.year
+                            picDateTimeMonth = picDateTime.strftime("%B")
+                            #check if there ia a containing year
+                            if str(picDateTimeYear) in rowValue:
                                 #should add to the treeiter
                                 iterPath = Gtk.TreePath(rowIndex)
                                 treeiter = self.treestore.get_iter(iterPath)
@@ -173,6 +181,8 @@ class UpdateAlbum(threading.Thread):
                             rowIndex+=1
         
         listIndex = 0
+        
+        #scan album to check if there are pics removed
         for photo in self.album.pics:
             isFile = os.path.exists(photo.dirName+"/"+photo.fileName)
             if isFile==False:
