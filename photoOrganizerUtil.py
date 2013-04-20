@@ -79,6 +79,9 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
     albumCollection = AlbumCollection()
     if os.path.exists(dirPath):
         for (path, dirs, files) in os.walk(dirPath):
+            minYearFound = None
+            minMonthFoundAsNumber = None
+            minMonthFound = None
             logger.debug("Scanning path:%s"%path)
             statusBar.push(context, path)
             while Gtk.events_pending():
@@ -87,11 +90,25 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
             album.title = path
             for file in files:
                 #extract creation date
-                stringCreationDate = time.ctime(os.path.getctime(path+"/"+file))
-                albumDateTime = datetime.strptime(stringCreationDate, "%a %b %d %H:%M:%S %Y")
-                albumDateTimeYear = albumDateTime.year
-                albumDateTimeMonth = albumDateTime.strftime("%B")
-                albumDateTimeMonthNumber = albumDateTime.month
+                fileCreationDate = time.ctime(os.path.getctime(path+"/"+file))
+                fileDateTime = datetime.strptime(fileCreationDate, "%a %b %d %H:%M:%S %Y")
+                fileDateTimeYear = fileDateTime.year
+                fileDateTimeMonthAsNumber = fileDateTime.month
+                fileDateTimeMonth = fileDateTime.strftime("%B")
+                if minYearFound is None:
+                    minYearFound = fileDateTimeYear
+                if minMonthFound is None:
+                   minMonthFound =  fileDateTimeMonth  
+                   minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                if fileDateTimeYear < minYearFound:
+                    minYearFound = fileDateTimeYear
+                    minMonthFound =  fileDateTimeMonth
+                    minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                else:
+                    if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                        minMonthFound =  fileDateTimeMonth
+                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber 
+  
                 filename = os.path.join(path, file)
                 try:
                     if imghdr.what(filename)!=None:
@@ -101,17 +118,39 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                         photoFile.dirName = path
                         photoFile.fileName = file
                         photoFile.shortName = photoFile.fileName
+                        #extract photo date
+                        if photoFile.date is not None:
+                            photoFileDateAsTime = datetime.strptime(photoFile.date, "%Y:%m:%d %H:%M:%S")
+                            fileDateTimeYear = photoFileDateAsTime.year
+                            fileDateTimeMonthAsNumber = photoFileDateAsTime.month
+                            fileDateTimeMonth = photoFileDateAsTime.strftime("%B")
+                        if minYearFound is None:
+                            minYearFound = fileDateTimeYear
+                        if minMonthFound is None:
+                            minMonthFound =  fileDateTimeMonth  
+                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                        if fileDateTimeYear < minYearFound:
+                            minYearFound = fileDateTimeYear
+                            minMonthFound =  fileDateTimeMonth
+                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                        else:
+                            if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                                minMonthFound =  fileDateTimeMonth
+                                minMonthFoundAsNumber = fileDateTimeMonthAsNumber 
+                    
+
                         album.pics.append(photoFile)
                         totalPicsFound+=1 
                 except IOError:
                     logger.error("IOERROR %s",filename)  
                     
-            #must set album date   
-            album.year =  albumDateTimeYear
-            album.month = albumDateTimeMonth
+            #must set album year and month   
+            album.year =  minYearFound
+            album.month = minMonthFound
             listYearValue = yearDictionary.get(album.year) 
             if listYearValue is None:
-                piter = treestore.append(None, ['%s' % album.year])
+                if album.year is not None:
+                    piter = treestore.append(None, ['%s' % album.year])
                 while Gtk.events_pending():
                     Gtk.main_iteration_do(False)
                 yearDictionary[album.year] = piter
@@ -128,7 +167,6 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                 album.totalPics = len(album.pics)
                 
                 #add to tree --> album title
-                #piter = treestore.append(None, ['%s' % album.year])
                 piter = treestore.append(monthDictionary[str(album.year)+"-"+str(album.month)], ['%s' % album.title])
                 imageMap[album.title] = None
                 subImageMap = {}
@@ -150,8 +188,8 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                     Gtk.main_iteration_do(False)
                 
                 
-    logger.debug("Total pics found:%d"%totalPicsFound)  
-    logger.debug("Albums found:%d"%len(albumCollection.albums))
+    logger.debug("***Final count:Total pics found:%d"%totalPicsFound)  
+    logger.debug("***Final count:Albums found:%d"%len(albumCollection.albums))
     albumCollection.totalPics = totalPicsFound
     return albumCollection,imageMap,photoDictionary    
          

@@ -8,7 +8,6 @@ Created on Mar 01, 2013
 '''
 
 import os
-import time
 import math
 import urllib2
 import logging.config
@@ -20,7 +19,6 @@ import StringIO
 import Image
 import imghdr
 import threading
-from datetime import datetime
 from transparentWindow import TransparentWindow
 from entryCompletion import EntryCompletion
 from cairo import ImageSurface 
@@ -148,44 +146,35 @@ class UpdateAlbum(threading.Thread):
                     if imghdr.what(self.path+"/"+file)!=None:
                         rowIndex = 0
                         for row in self.treestore:
-                            # Print values of all columns
-                            rowValue = row[:]
-                            #get pic year
-                            stringCreationDate = time.ctime(os.path.getctime(self.path+"/"+file))
-                            picDateTime = datetime.strptime(stringCreationDate, "%a %b %d %H:%M:%S %Y")
-                            picDateTimeYear = picDateTime.year
-                            #check if there is a containing year
-                            if str(picDateTimeYear) in rowValue:
-                                #should add to the treeiter
-                                iterPath = Gtk.TreePath(rowIndex)
-                                treeiter = self.treestore.get_iter(iterPath)
-                                treeiterChild = self.treestore.iter_children(treeiter)
-                                while treeiterChild is not None:
-                                    treeiter2Child = self.treestore.iter_children(treeiterChild)
-                                    while treeiter2Child is not None:
-                                        treeiter2ChildValue = self.treestore[treeiter2Child][:]
-                                        if self.path in treeiter2ChildValue:
-                                            self.treestore.append(treeiter2Child,['%s' %self.path+"/"+file])
-                                            self.statusBar.push(self.context,"added:"+self.path+"/"+file)
-                                            while Gtk.events_pending():
-                                                Gtk.main_iteration_do(False)
-                                            photoFile = photoOrganizerUtil.get_exif_data(self.path+"/"+file)
-                                            if photoFile==None:
-                                                photoFile = PhotoFile()  
-                                            photoFile.dirName = path
-                                            photoFile.fileName = file
-                                            photoFile.shortName = photoFile.fileName
-                                            #add to original album
-                                            self.album.pics.append(photoFile)
-                                            #add to dic
-                                            totalPhotoDictionary[self.path+"/"+file] = photoFile
-                                            #update imageMap
-                                            subImageMap = {}
-                                            subImageMap[photoFile.fileName] = photoFile
-                                            imageMap[self.path].update(subImageMap)
-                                        treeiter2Child = self.treestore.iter_next(treeiter2Child)
-                                        
-                                    treeiterChild = self.treestore.iter_next(treeiterChild)
+                            iterPath = Gtk.TreePath(rowIndex)
+                            treeiter = self.treestore.get_iter(iterPath)
+                            treeiterChild = self.treestore.iter_children(treeiter)
+                            while treeiterChild is not None:
+                                treeiter2Child = self.treestore.iter_children(treeiterChild)
+                                while treeiter2Child is not None:
+                                    treeiter2ChildValue = self.treestore[treeiter2Child][:]
+                                    if self.path in treeiter2ChildValue:
+                                        self.treestore.append(treeiter2Child,['%s' %self.path+"/"+file])
+                                        self.statusBar.push(self.context,"added:"+self.path+"/"+file)
+                                        while Gtk.events_pending():
+                                            Gtk.main_iteration_do(False)
+                                        photoFile = photoOrganizerUtil.get_exif_data(self.path+"/"+file)
+                                        if photoFile==None:
+                                            photoFile = PhotoFile()  
+                                        photoFile.dirName = path
+                                        photoFile.fileName = file
+                                        photoFile.shortName = photoFile.fileName
+                                        #add to original album
+                                        self.album.pics.append(photoFile)
+                                        #add to dic
+                                        totalPhotoDictionary[self.path+"/"+file] = photoFile
+                                        #update imageMap
+                                        subImageMap = {}
+                                        subImageMap[photoFile.fileName] = photoFile
+                                        imageMap[self.path].update(subImageMap)
+                                    treeiter2Child = self.treestore.iter_next(treeiter2Child)
+                                    
+                                treeiterChild = self.treestore.iter_next(treeiterChild)
                             rowIndex+=1
         
         listIndex = 0
@@ -753,9 +742,12 @@ class PhotoOrganizerGUI(Gtk.Window):
         #set the cursor for tagging
         cross_cursor = Gdk.Cursor(Gdk.CursorType.CROSSHAIR)
         imagePanel.get_window().set_cursor(cross_cursor)
-        self.add(self.darea)
-        self.darea.show()
+        self.darea.set_size_request(pixbuf.get_width(),pixbuf.get_height())
         imagePanel.add_with_viewport(self.darea)
+        #before showing need to get faces coordinates
+        self.faces = []
+        self.faces = photoEffects.buildFacesCoordinates(self.imagePathOpened)
+        logger.debug("faces found:%d",len(self.faces))
         imagePanel.show_all()
     
     def on_drawing_area_tagPeople_draw(self, wid, cr):
@@ -770,8 +762,29 @@ class PhotoOrganizerGUI(Gtk.Window):
         cr.save()
         iss = ImageSurface.create_from_png(self.buffer)
         cr.set_source_surface(iss)
+        
         cr.paint()
         cr.restore()
+        
+        #draw rectabgle with faces
+        if self.faces is not None and len(self.faces)>0:
+            for face in self.faces:
+                xx = face[0][0]
+                yy = face[0][1]
+                width = face[0][2]
+                height = face[0][3]
+                             
+                cr.move_to(xx,yy)
+                cr.line_to(xx+width,yy)
+                cr.move_to(xx,yy)
+                cr.line_to(xx,yy+height)
+                cr.move_to(xx,yy+height)
+                cr.line_to(xx+width,yy+height)
+                cr.move_to(xx+width,yy+height)
+                cr.line_to(xx+width,yy)
+                
+                cr.stroke()
+        
     
     def on_drawing_area_tagPeople_button_press(self, w, e):
         if e.type == Gdk.EventType.BUTTON_PRESS and e.button == 1:
@@ -853,8 +866,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.darea.connect("button-press-event", self.on_drawing_area_button_press)
         self.darea.connect("button-release-event", self.on_drawing_area_button_release)
         self.darea.connect("motion_notify_event", self.on_drawing_area_button_move) 
-        self.add(self.darea)
-        self.darea.show()
+        self.darea.set_size_request(pixbuf.get_width(),pixbuf.get_height())
         imagePanel.add_with_viewport(self.darea)
         imagePanel.show_all()
     
@@ -1103,6 +1115,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         context = statusBar.get_context_id("example")        
         # create the treestore; the model has one column of type string
         treestore = Gtk.TreeStore(str)
+        treestore.set_sort_column_id(0,Gtk.SortType.DESCENDING)
         treeview = self.builder.get_object("treeviewAlbum")    
         leftPanel = self.builder.get_object("leftPanel")
         #set current tab
@@ -1118,6 +1131,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         totalPhotoDictionary = photoDictionary
 
         if len(albumCollection.albums) >0:
+            #need to erase people tags
+            if(self.photoOrganizerPref is not None and self.photoOrganizerPref.peopleTag is not None):
+                self.photoOrganizerPref.peopleTag = None
             imageMap = imageDictionary
             self.currentTreeview = treeview
             treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
@@ -1133,6 +1149,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         monthDictionary = {}
         # create the treestore; the model has one column of type string
         treestore = Gtk.TreeStore(str)
+        treestore.set_sort_column_id(0,Gtk.SortType.DESCENDING)
         for album in albumCollection.albums:
             
             listYearValue = yearDictionary.get(album.year) 

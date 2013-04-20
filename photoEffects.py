@@ -7,6 +7,7 @@ Created on Mar 21, 2013
 '''
 
 import StringIO
+import cv2.cv as cv
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
 from PIL import Image,ImageOps,ImageFilter,ImageEnhance,ImageDraw,ImageFont
 
@@ -372,3 +373,16 @@ def fromImageToPixbuf(y):
     pixbuf = loader.get_pixbuf()
     loader.close()
     return pixbuf
+
+def buildFacesCoordinates(imageFile):
+    faces = []
+    im = cv.LoadImageM(imageFile)
+    storage = cv.CreateMemStorage()
+    #it looks like the xml closest
+    haar=cv.Load("config/haarcascade_frontalface_alt_tree.xml")
+    detected = cv.HaarDetectObjects(im, haar, storage, 1.1, 2,cv.CV_HAAR_DO_CANNY_PRUNING,(10,10))
+    if detected:
+        for face in detected:
+            faces.append(face)
+    return faces;
+
