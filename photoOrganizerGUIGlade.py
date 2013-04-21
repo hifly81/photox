@@ -131,7 +131,7 @@ class UpdateAlbum(threading.Thread):
     def update_rows(self,store, treeiter,pathToSearch):
         while treeiter != None:
             if pathToSearch in str(store[treeiter][:]):
-                  self.treestore.remove(treeiter)
+                self.treestore.remove(treeiter)
             if store.iter_has_child(treeiter):
                 childiter = store.iter_children(treeiter)
                 self.update_rows(store, childiter,pathToSearch)
@@ -746,7 +746,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         imagePanel.add_with_viewport(self.darea)
         #before showing need to get faces coordinates
         self.faces = []
-        self.faces = photoEffects.buildFacesCoordinates(self.imagePathOpened)
+        self.faces = photoEffects.buildFacesCoordinates(photoEffects.fromPixbufToPilImage(pixbuf))
         logger.debug("faces found:%d",len(self.faces))
         imagePanel.show_all()
     

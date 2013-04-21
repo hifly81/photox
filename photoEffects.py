@@ -309,7 +309,7 @@ def apply_watermarkSignature(pixbuf,textSignature="text",inputFont="/usr/share/f
 def scaleImageFromPixbuf(pixbuf,interpType):
     orig_width =  pixbuf.get_width()
     orig_height = pixbuf.get_height()
-    '''if orig_width >= orig_height:
+    if orig_width >= orig_height:
         if orig_width > 700:
             orig_width = 700
         if orig_height > 600:
@@ -319,7 +319,7 @@ def scaleImageFromPixbuf(pixbuf,interpType):
             orig_width = 600
         if orig_height > 700:
             orig_height = 700
-    '''
+    
     '''
     filter could be applied (increasing order of quality):
         - NEAREST
@@ -374,9 +374,15 @@ def fromImageToPixbuf(y):
     loader.close()
     return pixbuf
 
-def buildFacesCoordinates(imageFile):
+def fromPixbufToPilImage(pixbuf):
+    width,height = pixbuf.get_width(),pixbuf.get_height() 
+    y = Image.fromstring(RGB,(width,height),pixbuf.get_pixels() )
+    return y
+
+def buildFacesCoordinates(imagePil):
     faces = []
-    im = cv.LoadImageM(imageFile)
+    im = cv.CreateImageHeader(imagePil.size, cv.IPL_DEPTH_8U, 3)
+    cv.SetData(im, imagePil.tostring())
     storage = cv.CreateMemStorage()
     #it looks like the xml closest
     haar=cv.Load("config/haarcascade_frontalface_alt_tree.xml")
