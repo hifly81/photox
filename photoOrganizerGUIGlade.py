@@ -21,6 +21,7 @@ import imghdr
 import threading
 from transparentWindow import TransparentWindow
 from entryCompletion import EntryCompletion
+from loadingWindow import LoadingWindow
 from cairo import ImageSurface 
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject,GLib
 from photoOrganizerStorage import PhotoOrganizerPref
@@ -274,7 +275,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.window = self.builder.get_object("PhotoOrganizer")
         self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)   
         #center the window
-        self.window.set_position(Gtk.WindowPosition.CENTER)         
+        self.window.set_position(Gtk.WindowPosition.CENTER)       
+        #maximize the window 
+        self.window.maximize()
         self.window.show_all()
         
         #load pref at startup, including albums saved
@@ -746,7 +749,11 @@ class PhotoOrganizerGUI(Gtk.Window):
         imagePanel.add_with_viewport(self.darea)
         #before showing need to get faces coordinates
         self.faces = []
+        loadWindow = LoadingWindow()
+        while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
         self.faces = photoEffects.buildFacesCoordinates(photoEffects.fromPixbufToPilImage(pixbuf))
+        loadWindow.close_window()
         logger.debug("faces found:%d",len(self.faces))
         imagePanel.show_all()
     
@@ -1096,16 +1103,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                         Gtk.main_iteration_do(False)
     
     def callScanPhoto(self):
-        loadWindow = Gtk.Window()
-        loadImage = Gtk.Image()
-        pixbufanim = GdkPixbuf.PixbufAnimation.new_from_file("images/load.gif")
-        loadImage.set_from_animation(pixbufanim)
-        #no title bar
-        loadWindow.set_decorated(False)
-        loadWindow.add(loadImage)
-        #center the window
-        loadWindow.set_position(Gtk.WindowPosition.CENTER)  
-        loadWindow.show_all()
+        loadWindow = LoadingWindow()
         
         while Gtk.events_pending():
             Gtk.main_iteration_do(False)
@@ -1137,10 +1135,10 @@ class PhotoOrganizerGUI(Gtk.Window):
             imageMap = imageDictionary
             self.currentTreeview = treeview
             treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
-            loadWindow.destroy()
+            loadWindow.close_window()
             leftPanel.show_all()
         else:
-            loadWindow.destroy()
+            loadWindow.close_window()
             self.on_PhotoOrganizer_search_error_event() 
     
     #create the main panel with a tree

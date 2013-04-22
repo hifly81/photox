@@ -310,15 +310,15 @@ def scaleImageFromPixbuf(pixbuf,interpType):
     orig_width =  pixbuf.get_width()
     orig_height = pixbuf.get_height()
     if orig_width >= orig_height:
-        if orig_width > 700:
-            orig_width = 700
-        if orig_height > 600:
-            orig_height = 600  
+        if orig_width > 1000:
+            orig_width = 1000
+        if orig_height > 800:
+            orig_height = 800  
     if orig_width < orig_height:
-        if orig_width > 600:
-            orig_width = 600
-        if orig_height > 700:
-            orig_height = 700
+        if orig_width > 800:
+            orig_width = 800
+        if orig_height > 1000:
+            orig_height = 1000
     
     '''
     filter could be applied (increasing order of quality):
