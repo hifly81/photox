@@ -104,6 +104,7 @@ UI_INFO = """
         <menuitem action='EditOriginalSize' />
         <menuitem action='EditHistogram' /> 
         <menuitem action='EditGrab' /> 
+        <menuitem action='EditWebcam' /> 
         <menuitem action='EditSave' />
     </menu>
    </popup>
@@ -263,6 +264,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_save_clicked":self.on_PhotoOrganizer_save_clicked,
                     "on_PhotoOrganizer_frame_clicked":self.on_PhotoOrganizer_frame_clicked,
                     "on_PhotoOrganizer_tagPeople_clicked":self.on_PhotoOrganizer_tagPeople_clicked,
+                    "on_PhotoOrganizer_webcam_clicked":self.on_PhotoOrganizer_webcam_clicked,
         }
         #handler of GUI signals
         self.builder.connect_signals(handlers)
@@ -371,7 +373,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditSave", Gtk.STOCK_SAVE, "Save", "<control><alt>S", None,
              self.on_PhotoOrganizer_save_clicked),
             ("EditTagPeople", Gtk.STOCK_SAVE, "TagPeople", "<control><alt>S", None,
-             self.on_PhotoOrganizer_tagPeople_clicked),                                                         
+             self.on_PhotoOrganizer_tagPeople_clicked),    
+            ("EditWebcam", Gtk.STOCK_SAVE, "Webcam", "<control><alt>S", None,
+             self.on_PhotoOrganizer_webcam_clicked),                                                     
         ])
         uimanager = Gtk.UIManager()
         # Throws exception if something went wrong
@@ -660,6 +664,9 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_frame_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_frame(pixbuf)) 
+    
+    def on_PhotoOrganizer_webcam_clicked(self,widget):
+        self.imageOpened.set_from_pixbuf(photoEffects.captureWebcamImage())
 
     def on_PhotoOrganizer_save_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))

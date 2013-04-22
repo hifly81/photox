@@ -7,7 +7,9 @@ Created on Mar 21, 2013
 '''
 
 import StringIO
+import cv2
 import cv2.cv as cv
+import os
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
 from PIL import Image,ImageOps,ImageFilter,ImageEnhance,ImageDraw,ImageFont
 
@@ -391,4 +393,26 @@ def buildFacesCoordinates(imagePil):
         for face in detected:
             faces.append(face)
     return faces;
+
+def captureWebcamImage():
+    #import numpy
+    
+    camera_port = 0
+    ramp_frames = 30
+    camera = cv2.VideoCapture(camera_port)
+    for i in xrange(ramp_frames):
+        camera.read()
+    retval, data = camera.read()
+    #tmp file
+    file = "/tmp/photoOrganizer.png"
+    
+    cv2.imwrite(file, data)
+    pi = Image.open(file) 
+
+    #remove tmp file
+    os.remove(file)
+    #close camera
+    del(camera)
+    
+    return fromImageToPixbuf(pi)
 
