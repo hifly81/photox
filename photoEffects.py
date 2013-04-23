@@ -395,11 +395,10 @@ def buildFacesCoordinates(imagePil):
     return faces;
 
 def captureWebcamImage():
-    #import numpy
-    
     camera_port = 0
     ramp_frames = 30
     camera = cv2.VideoCapture(camera_port)
+    #time to adjust camera
     for i in xrange(ramp_frames):
         camera.read()
     retval, data = camera.read()

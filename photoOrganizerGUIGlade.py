@@ -20,6 +20,7 @@ import Image
 import imghdr
 import threading
 from transparentWindow import TransparentWindow
+from editWindow import EditWindow
 from entryCompletion import EntryCompletion
 from loadingWindow import LoadingWindow
 from cairo import ImageSurface 
@@ -97,12 +98,10 @@ UI_INFO = """
         <menuitem action='EditBrigthness' />
         <menuitem action='EditLight' /> 
     </menu>
-    <menu action="People">
-        <menuitem action='EditTagPeople' />
-    </menu>
     <menu action="Other">
         <menuitem action='EditOriginalSize' />
         <menuitem action='EditHistogram' /> 
+        <menuitem action='EditTagPeople' />
         <menuitem action='EditGrab' /> 
         <menuitem action='EditWebcam' /> 
         <menuitem action='EditSave' />
@@ -640,6 +639,7 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_sepia_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_sepia(pixbuf))
+        e = EditWindow(self.imagePathOpened)
     
     def on_PhotoOrganizer_watermark_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
@@ -666,6 +666,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.imageOpened.set_from_pixbuf(photoEffects.apply_frame(pixbuf)) 
     
     def on_PhotoOrganizer_webcam_clicked(self,widget):
+        #need to be sure a imagePanel is already created
+        if len(self.builder.get_object("imagePanel").get_children())==0:
+            self.createImagePanel(None)
         self.imageOpened.set_from_pixbuf(photoEffects.captureWebcamImage())
 
     def on_PhotoOrganizer_save_clicked(self, widget):
@@ -982,7 +985,6 @@ class PhotoOrganizerGUI(Gtk.Window):
         END SECTION FOR EVENTS
     '''
             
-    
     def createScaledImage(self,imagePath): 
         pimage = Gtk.Image()
         
@@ -1002,7 +1004,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         scaled_buf = photoEffects.scaleImageFromPixbuf(pixbuf,GdkPixbuf.InterpType.HYPER)
         pimage.set_from_pixbuf(scaled_buf)
         self.imagePathOpened = imagePath
-        self.createImagePanel(pimage,imagePath)
+        self.createImagePanel(pimage)
         
         if(self.twitterSearch):
             mediaUrl = self.imagePathOpened
@@ -1035,18 +1037,22 @@ class PhotoOrganizerGUI(Gtk.Window):
                 gpsText = gpsText+str(self.currentPhoto.latitude)+","+str(self.currentPhoto.longitude)
             self.builder.get_object("detailsEntry").get_buffer().set_text(dateText+descText+authorText+modelText+gpsText)
     
-    def createImagePanel(self,pimage,imageName):    
+    def createImagePanel(self,pimage):    
         imagePanel = self.builder.get_object("imagePanel")
         try:
             imagePanel.remove(imagePanel.get_children()[0])
         except:
             pass
         eventBox = Gtk.EventBox()
-        eventBox.add(pimage)
-        #reference to image selected
-        self.imageOpened = pimage
         eventBox.connect("button_press_event",self.on_PhotoOrganizer_image_contextmenu_event)
-        pimage.show()
+        if(pimage is not None):
+            eventBox.add(pimage)
+            #reference to image selected
+            self.imageOpened = pimage
+            pimage.show()
+        else:
+            self.imageOpened = Gtk.Image()
+            eventBox.add(self.imageOpened)
         imagePanel.add_with_viewport(eventBox)
         imagePanel.show_all()
 
