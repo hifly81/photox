@@ -195,6 +195,8 @@ def apply_polaroid(pixbuf,imageText):
  
     return fromImageToPixbuf(imgOutput)
 
+
+
 '''
 Effect based on a range of values
 '''
