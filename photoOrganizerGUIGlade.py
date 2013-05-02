@@ -73,7 +73,7 @@ UI_INFO = """
         <menuitem action='EditSharpness' />
         <menuitem action='EditDeform' />
     </menu>
-    <menu action="Refine">
+    <menu action="Stylish">
         <menuitem action='EditBordered' />
         <menuitem action='EditUnbordered' />
         <menuitem action='EditPolaroid' />
@@ -218,6 +218,11 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.mainEditMenuOpened = False
         self.mainOtherMenuOpened = False
         self.mainEffectsMenuOpened = False
+        self.mainTransformMenuOpened = False
+        self.mainStylishMenuOpened = False
+        self.mainFilterMenuOpened = False
+        self.mainColorMenuOpened = False
+        self.mainLightMenuOpened = False
 
         #build GUI from glade
         self.builder = Gtk.Builder()
@@ -226,10 +231,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_delete_event": self.on_PhotoOrganizer_delete_event,
                     "on_PhotoOrganizer_search_event": self.on_PhotoOrganizer_search_event,
                     "on_PhotoOrganizer_twitter_search_event": self.on_PhotoOrganizer_twitter_search_event,
-                    "on_PhotoOrganizer_border_clicked": self.on_PhotoOrganizer_border_clicked,
-                    "on_PhotoOrganizer_unborder_clicked":self.on_PhotoOrganizer_unborder_clicked,
                     "on_PhotoOrganizer_autocontrast_clicked": self.on_PhotoOrganizer_autocontrast_clicked,
-                    "on_PhotoOrganizer_deform_clicked": self.on_PhotoOrganizer_deform_clicked,
                     "on_PhotoOrganizer_invert_clicked": self.on_PhotoOrganizer_invert_clicked,
                     "on_PhotoOrganizer_posterize_clicked": self.on_PhotoOrganizer_posterize_clicked,
                     "on_PhotoOrganizer_blur_clicked":self.on_PhotoOrganizer_blur_clicked,
@@ -237,20 +239,19 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_edge_clicked": self.on_PhotoOrganizer_edge_clicked,
                     "on_PhotoOrganizer_emboss_clicked": self.on_PhotoOrganizer_emboss_clicked,
                     "on_PhotoOrganizer_smooth_clicked": self.on_PhotoOrganizer_smooth_clicked,
-                    "on_PhotoOrganizer_sharpen_clicked":self.on_PhotoOrganizer_sharpen_clicked,
                     "on_PhotoOrganizer_brightness_clicked": self.on_PhotoOrganizer_brightness_clicked,
                     "on_PhotoOrganizer_contrast_clicked": self.on_PhotoOrganizer_contrast_clicked,
                     "on_PhotoOrganizer_sharpness_clicked": self.on_PhotoOrganizer_sharpness_clicked,
+                    "on_PhotoOrganizer_sharpen_clicked": self.on_PhotoOrganizer_sharpen_clicked,
                     "on_PhotoOrganizer_color_clicked":self.on_PhotoOrganizer_color_clicked,
-                    "on_PhotoOrganizer_polaroid_clicked":self.on_PhotoOrganizer_polaroid_clicked,
-                    "on_PhotoOrganizer_watermark_clicked":self.on_PhotoOrganizer_watermark_clicked,
                     "on_PhotoOrganizer_light_clicked":self.on_PhotoOrganizer_light_clicked,
                     "on_PhotoOrganizer_gaussian_clicked":self.on_PhotoOrganizer_gaussian_clicked,
                     "on_PhotoOrganizer_colorize_clicked":self.on_PhotoOrganizer_colorize_clicked,       
-                    "on_PhotoOrganizer_frame_clicked":self.on_PhotoOrganizer_frame_clicked,
                     "on_PhotoOrganizer_mainEdit_clicked":self.on_PhotoOrganizer_mainEdit_clicked,
                     "on_PhotoOrganizer_mainOther_clicked":self.on_PhotoOrganizer_mainOther_clicked,
                     "on_PhotoOrganizer_mainEffects_clicked":self.on_PhotoOrganizer_mainEffects_clicked,
+                    "on_PhotoOrganizer_mainTransform_clicked":self.on_PhotoOrganizer_mainTransform_clicked,
+                    "on_PhotoOrganizer_mainStylish_clicked":self.on_PhotoOrganizer_mainStylish_clicked,
         }
         #handler of GUI signals
         self.builder.connect_signals(handlers)
@@ -280,7 +281,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("Effects", Gtk.STOCK_ZOOM_FIT, "Effects", "<control><alt>O", None,None), 
             ("Edit", Gtk.STOCK_ZOOM_FIT, "Edit", "<control><alt>O", None,None),      
             ("Transform", Gtk.STOCK_ZOOM_FIT, "Transform", "<control><alt>O", None,None), 
-            ("Refine", Gtk.STOCK_ZOOM_FIT, "Refine", "<control><alt>O", None,None), 
+            ("Stylish", Gtk.STOCK_ZOOM_FIT, "Stylish", "<control><alt>O", None,None), 
             ("Filter", Gtk.STOCK_ZOOM_FIT, "Filter", "<control><alt>O", None,None),  
             ("Color", Gtk.STOCK_ZOOM_FIT, "Color", "<control><alt>O", None,None), 
             ("Light", Gtk.STOCK_ZOOM_FIT, "Light", "<control><alt>O", None,None), 
@@ -509,6 +510,8 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainEditMenuOpened = True
             self.mainOtherMenuOpened = False
             self.mainEffectsMenuOpened = False
+            self.mainTransformMenuOpened = False
+            self.mainStylishMenuOpened = False
             boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
@@ -544,11 +547,74 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonCrop.show()
             buttonResize.show()
     
+    def on_PhotoOrganizer_mainTransform_clicked(self,widget):
+        if(self.mainTransformMenuOpened ==False):
+            self.mainTransformMenuOpened = True
+            self.mainEffectsMenuOpened = False
+            self.mainOtherMenuOpened = False
+            self.mainEditMenuOpened = False
+            self.mainStylishMenuOpened = False
+            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxChildren = boxBottom.get_children()
+            if len(boxChildren) >0:
+                for childEl in boxChildren:
+                    boxBottom.remove(childEl)
+            buttonSharpness = Gtk.Button("Sharpness")
+            buttonSharpness.set_size_request(50,20)
+            buttonSharpness.connect("clicked", self.on_PhotoOrganizer_sharpness_clicked)
+            buttonDeform = Gtk.Button("Deform")
+            buttonDeform.set_size_request(50,20)
+            buttonDeform.connect("clicked", self.on_PhotoOrganizer_deform_clicked)
+            boxBottom.pack_start(buttonSharpness, False, False, 0)
+            boxBottom.pack_start(buttonDeform, False, False, 0)
+            buttonSharpness.show()
+            buttonDeform.show()
+      
+    def on_PhotoOrganizer_mainStylish_clicked(self,widget):
+        if(self.mainStylishMenuOpened ==False):
+            self.mainStylishMenuOpened = True
+            self.mainEffectsMenuOpened = False
+            self.mainOtherMenuOpened = False
+            self.mainEditMenuOpened = False
+            self.mainTransformMenuOpened = False
+            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxChildren = boxBottom.get_children()
+            if len(boxChildren) >0:
+                for childEl in boxChildren:
+                    boxBottom.remove(childEl)
+            buttonBordered = Gtk.Button("Border")
+            buttonBordered.set_size_request(50,20)
+            buttonBordered.connect("clicked",self.on_PhotoOrganizer_border_clicked)
+            buttonUnbordered = Gtk.Button("Unborder")
+            buttonUnbordered.set_size_request(50,20)
+            buttonUnbordered.connect("clicked", self.on_PhotoOrganizer_unborder_clicked)
+            buttonPolaroid = Gtk.Button("Polaroid")
+            buttonPolaroid.set_size_request(50,20)
+            buttonPolaroid.connect("clicked", self.on_PhotoOrganizer_polaroid_clicked)
+            buttonFrame = Gtk.Button("Frame")
+            buttonFrame.set_size_request(50,20)
+            buttonFrame.connect("clicked", self.on_PhotoOrganizer_frame_clicked)
+            buttonWatermark = Gtk.Button("Watermark")
+            buttonWatermark.set_size_request(50,20)
+            buttonWatermark.connect("clicked", self.on_PhotoOrganizer_watermark_clicked)
+            boxBottom.pack_start(buttonBordered, False, False, 0)
+            boxBottom.pack_start(buttonUnbordered, False, False, 0)
+            boxBottom.pack_start(buttonPolaroid, False, False, 0)
+            boxBottom.pack_start(buttonFrame, False, False, 0)
+            boxBottom.pack_start(buttonWatermark, False, False, 0)
+            buttonBordered.show()
+            buttonUnbordered.show() 
+            buttonPolaroid.show()    
+            buttonFrame.show() 
+            buttonWatermark.show()
+    
     def on_PhotoOrganizer_mainOther_clicked(self,widget):
         if(self.mainOtherMenuOpened ==False):
             self.mainOtherMenuOpened = True
             self.mainEditMenuOpened = False
             self.mainEffectsMenuOpened = False
+            self.mainTransformMenuOpened = False
+            self.mainStylishMenuOpened = False
             boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
@@ -589,6 +655,8 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainEffectsMenuOpened = True
             self.mainOtherMenuOpened = False
             self.mainEditMenuOpened = False
+            self.mainTransformMenuOpened = False
+            self.mainStylishMenuOpened = False
             boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
