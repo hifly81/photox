@@ -20,7 +20,7 @@ import Image
 import imghdr
 import threading
 from transparentWindow import TransparentWindow
-from editWindow import EditWindow
+from detailWindow import DetailWindow
 from entryCompletion import EntryCompletion
 from loadingWindow import LoadingWindow
 from cairo import ImageSurface 
@@ -103,6 +103,7 @@ UI_INFO = """
     </menu>
     <menu action="Other">
         <menuitem action='EditOriginalSize' />
+        <menuitem action='EditDetail' />
         <menuitem action='EditHistogram' /> 
         <menuitem action='EditTagPeople' />
         <menuitem action='EditGrab' /> 
@@ -231,34 +232,20 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_delete_event": self.on_PhotoOrganizer_delete_event,
                     "on_PhotoOrganizer_search_event": self.on_PhotoOrganizer_search_event,
                     "on_PhotoOrganizer_twitter_search_event": self.on_PhotoOrganizer_twitter_search_event,
-                    "on_PhotoOrganizer_autocontrast_clicked": self.on_PhotoOrganizer_autocontrast_clicked,
-                    "on_PhotoOrganizer_invert_clicked": self.on_PhotoOrganizer_invert_clicked,
-                    "on_PhotoOrganizer_posterize_clicked": self.on_PhotoOrganizer_posterize_clicked,
-                    "on_PhotoOrganizer_blur_clicked":self.on_PhotoOrganizer_blur_clicked,
-                    "on_PhotoOrganizer_contour_clicked":self.on_PhotoOrganizer_contour_clicked,
-                    "on_PhotoOrganizer_edge_clicked": self.on_PhotoOrganizer_edge_clicked,
-                    "on_PhotoOrganizer_emboss_clicked": self.on_PhotoOrganizer_emboss_clicked,
-                    "on_PhotoOrganizer_smooth_clicked": self.on_PhotoOrganizer_smooth_clicked,
-                    "on_PhotoOrganizer_brightness_clicked": self.on_PhotoOrganizer_brightness_clicked,
-                    "on_PhotoOrganizer_contrast_clicked": self.on_PhotoOrganizer_contrast_clicked,
-                    "on_PhotoOrganizer_sharpness_clicked": self.on_PhotoOrganizer_sharpness_clicked,
-                    "on_PhotoOrganizer_sharpen_clicked": self.on_PhotoOrganizer_sharpen_clicked,
-                    "on_PhotoOrganizer_color_clicked":self.on_PhotoOrganizer_color_clicked,
-                    "on_PhotoOrganizer_light_clicked":self.on_PhotoOrganizer_light_clicked,
-                    "on_PhotoOrganizer_gaussian_clicked":self.on_PhotoOrganizer_gaussian_clicked,
-                    "on_PhotoOrganizer_colorize_clicked":self.on_PhotoOrganizer_colorize_clicked,       
                     "on_PhotoOrganizer_mainEdit_clicked":self.on_PhotoOrganizer_mainEdit_clicked,
                     "on_PhotoOrganizer_mainOther_clicked":self.on_PhotoOrganizer_mainOther_clicked,
                     "on_PhotoOrganizer_mainEffects_clicked":self.on_PhotoOrganizer_mainEffects_clicked,
                     "on_PhotoOrganizer_mainTransform_clicked":self.on_PhotoOrganizer_mainTransform_clicked,
                     "on_PhotoOrganizer_mainStylish_clicked":self.on_PhotoOrganizer_mainStylish_clicked,
+                    "on_PhotoOrganizer_mainFilter_clicked":self.on_PhotoOrganizer_mainFilter_clicked,
+                    "on_PhotoOrganizer_mainColor_clicked":self.on_PhotoOrganizer_mainColor_clicked,
+                    "on_PhotoOrganizer_mainLight_clicked":self.on_PhotoOrganizer_mainLight_clicked,
         }
         #handler of GUI signals
         self.builder.connect_signals(handlers)
         
         #change textview color
-        parse, color = Gdk.Color.parse('#F0F0F0')
-        self.builder.get_object("detailsEntry").modify_bg(Gtk.StateType.NORMAL, color) 
+        parse, color = Gdk.Color.parse('#F0F0F0') 
             
         #show main window
         self.window = self.builder.get_object("PhotoOrganizer")
@@ -365,7 +352,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             ("EditWebcam", Gtk.STOCK_SAVE, "Webcam", "<control><alt>S", None,
              self.on_PhotoOrganizer_webcam_clicked),          
             ("EditFrame", Gtk.STOCK_SAVE, "Frame", "<control><alt>S", None,
-             self.on_PhotoOrganizer_frame_clicked),                                            
+             self.on_PhotoOrganizer_frame_clicked),   
+            ("EditDetail", Gtk.STOCK_SAVE, "Detail", "<control><alt>S", None,
+             self.on_PhotoOrganizer_detail_clicked),
         ])
         uimanager = Gtk.UIManager()
         # Throws exception if something went wrong
@@ -512,6 +501,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainEffectsMenuOpened = False
             self.mainTransformMenuOpened = False
             self.mainStylishMenuOpened = False
+            self.mainFilterMenuOpened = False
+            self.mainColorMenuOpened = False
+            self.mainLightMenuOpened = False
             boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
@@ -554,6 +546,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainOtherMenuOpened = False
             self.mainEditMenuOpened = False
             self.mainStylishMenuOpened = False
+            self.mainFilterMenuOpened = False
+            self.mainColorMenuOpened = False
+            self.mainLightMenuOpened = False
             boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
@@ -577,6 +572,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainOtherMenuOpened = False
             self.mainEditMenuOpened = False
             self.mainTransformMenuOpened = False
+            self.mainFilterMenuOpened = False
+            self.mainColorMenuOpened = False
+            self.mainLightMenuOpened = False
             boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
@@ -615,6 +613,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainEffectsMenuOpened = False
             self.mainTransformMenuOpened = False
             self.mainStylishMenuOpened = False
+            self.mainFilterMenuOpened = False
+            self.mainColorMenuOpened = False
+            self.mainLightMenuOpened = False
             boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
@@ -637,11 +638,15 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonSave = Gtk.Button("Save")
             buttonSave.set_size_request(50,20)
             buttonSave.connect("clicked", self.on_PhotoOrganizer_save_clicked)
+            buttonDetail = Gtk.Button("Detail")
+            buttonDetail.set_size_request(50,20)
+            buttonDetail.connect("clicked", self.on_PhotoOrganizer_detail_clicked)
+            boxBottom.pack_start(buttonOriginalsize, False, False, 0)
+            boxBottom.pack_start(buttonDetail, False, False, 0)
             boxBottom.pack_start(buttonHistogram, False, False, 0)
             boxBottom.pack_start(buttonTagpeople, False, False, 0)
             boxBottom.pack_start(buttonWebcam, False, False, 0)
             boxBottom.pack_start(buttonGrab, False, False, 0)
-            boxBottom.pack_start(buttonOriginalsize, False, False, 0)
             boxBottom.pack_start(buttonSave, False, False, 0)
             buttonHistogram.show()
             buttonTagpeople.show()
@@ -649,6 +654,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonGrab.show()
             buttonOriginalsize.show()
             buttonSave.show()
+            buttonDetail.show()
     
     def on_PhotoOrganizer_mainEffects_clicked(self,widget):
         if(self.mainEffectsMenuOpened ==False):
@@ -657,6 +663,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainEditMenuOpened = False
             self.mainTransformMenuOpened = False
             self.mainStylishMenuOpened = False
+            self.mainFilterMenuOpened = False
+            self.mainColorMenuOpened = False
+            self.mainLightMenuOpened = False
             boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
@@ -702,7 +711,130 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonLightgreen.show()
             buttonWhite.show()
             buttonGreen.show()
+     
+    def on_PhotoOrganizer_mainFilter_clicked(self,widget):
+        if(self.mainFilterMenuOpened ==False):
+            self.mainFilterMenuOpened = True
+            self.mainOtherMenuOpened = False
+            self.mainEditMenuOpened = False
+            self.mainTransformMenuOpened = False
+            self.mainStylishMenuOpened = False
+            self.mainEffectsMenuOpened = False
+            self.mainColorMenuOpened = False
+            self.mainLightMenuOpened = False
+            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxChildren = boxBottom.get_children()
+            if len(boxChildren) >0:
+                for childEl in boxChildren:
+                    boxBottom.remove(childEl)
+            buttonBlur = Gtk.Button("Blur")
+            buttonBlur.set_size_request(50,20)
+            buttonBlur.connect("clicked", self.on_PhotoOrganizer_blur_clicked)
+            buttonGaussian = Gtk.Button("Gaussian")
+            buttonGaussian.set_size_request(50,20)
+            buttonGaussian.connect("clicked", self.on_PhotoOrganizer_gaussian_clicked)
+            buttonContour = Gtk.Button("Contour")
+            buttonContour.set_size_request(50,20)
+            buttonContour.connect("clicked", self.on_PhotoOrganizer_contour_clicked)
+            buttonEdge = Gtk.Button("Edge")
+            buttonEdge.set_size_request(50,20)
+            buttonEdge.connect("clicked", self.on_PhotoOrganizer_edge_clicked)
+            buttonEmboss = Gtk.Button("Emboss")
+            buttonEmboss.set_size_request(50,20)
+            buttonEmboss.connect("clicked", self.on_PhotoOrganizer_emboss_clicked)
+            buttonSmooth = Gtk.Button("Smooth")
+            buttonSmooth.set_size_request(50,20)
+            buttonSmooth.connect("clicked", self.on_PhotoOrganizer_smooth_clicked)
+            buttonSharpen = Gtk.Button("Sharpen")
+            buttonSharpen.set_size_request(50,20)
+            buttonSharpen.connect("clicked", self.on_PhotoOrganizer_sharpen_clicked)
+            boxBottom.pack_start(buttonBlur, False, False, 0)
+            boxBottom.pack_start(buttonGaussian, False, False, 0)
+            boxBottom.pack_start(buttonContour, False, False, 0)
+            boxBottom.pack_start(buttonEdge, False, False, 0)
+            boxBottom.pack_start(buttonEmboss, False, False, 0)
+            boxBottom.pack_start(buttonSmooth, False, False, 0)
+            boxBottom.pack_start(buttonSharpen, False, False, 0)
+            buttonBlur.show()
+            buttonGaussian.show()
+            buttonContour.show()
+            buttonEdge.show()
+            buttonEmboss.show()
+            buttonSmooth.show()
+            buttonSharpen.show()   
     
+    def on_PhotoOrganizer_mainColor_clicked(self,widget):
+        if(self.mainColorMenuOpened ==False):
+            self.mainColorMenuOpened = True
+            self.mainOtherMenuOpened = False
+            self.mainEditMenuOpened = False
+            self.mainTransformMenuOpened = False
+            self.mainStylishMenuOpened = False
+            self.mainEffectsMenuOpened = False
+            self.mainFilterMenuOpened = False
+            self.mainLightMenuOpened = False
+            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxChildren = boxBottom.get_children()
+            if len(boxChildren) >0:
+                for childEl in boxChildren:
+                    boxBottom.remove(childEl)
+            buttonColor = Gtk.Button("Color")
+            buttonColor.set_size_request(50,20)
+            buttonColor.connect("clicked", self.on_PhotoOrganizer_color_clicked)
+            buttonColorize = Gtk.Button("Colorize")
+            buttonColorize.set_size_request(50,20)
+            buttonColorize.connect("clicked", self.on_PhotoOrganizer_colorize_clicked)
+            buttonPosterize = Gtk.Button("Posterize")
+            buttonPosterize.set_size_request(50,20)
+            buttonPosterize.connect("clicked", self.on_PhotoOrganizer_posterize_clicked)
+            buttonContrast = Gtk.Button("Contrast")
+            buttonContrast.set_size_request(50,20)
+            buttonContrast.connect("clicked", self.on_PhotoOrganizer_contrast_clicked)
+            buttonAutocontrast = Gtk.Button("Autocontrast")
+            buttonAutocontrast.set_size_request(50,20)
+            buttonAutocontrast.connect("clicked", self.on_PhotoOrganizer_autocontrast_clicked)
+            boxBottom.pack_start(buttonColor, False, False, 0)
+            boxBottom.pack_start(buttonColorize, False, False, 0)
+            boxBottom.pack_start(buttonPosterize, False, False, 0)
+            boxBottom.pack_start(buttonContrast, False, False, 0)
+            boxBottom.pack_start(buttonAutocontrast, False, False, 0)
+            buttonColor.show()
+            buttonColorize.show()
+            buttonPosterize.show()
+            buttonContrast.show()
+            buttonAutocontrast.show()
+    
+    def on_PhotoOrganizer_mainLight_clicked(self,widget):
+        if(self.mainLightMenuOpened ==False):
+            self.mainLightMenuOpened = True
+            self.mainOtherMenuOpened = False
+            self.mainEditMenuOpened = False
+            self.mainTransformMenuOpened = False
+            self.mainStylishMenuOpened = False
+            self.mainEffectsMenuOpened = False
+            self.mainFilterMenuOpened = False
+            self.mainColorMenuOpened = False
+            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxChildren = boxBottom.get_children()
+            if len(boxChildren) >0:
+                for childEl in boxChildren:
+                    boxBottom.remove(childEl)
+            buttonInvert = Gtk.Button("Invert")
+            buttonInvert.set_size_request(50,20)
+            buttonInvert.connect("clicked", self.on_PhotoOrganizer_invert_clicked)
+            buttonBrightness = Gtk.Button("Brightness")
+            buttonBrightness.set_size_request(50,20)
+            buttonBrightness.connect("clicked", self.on_PhotoOrganizer_brightness_clicked)
+            buttonLight = Gtk.Button("Light")
+            buttonLight.set_size_request(50,20)
+            buttonLight.connect("clicked", self.on_PhotoOrganizer_light_clicked)
+            boxBottom.pack_start(buttonInvert, False, False, 0)
+            boxBottom.pack_start(buttonBrightness, False, False, 0)
+            boxBottom.pack_start(buttonLight, False, False, 0)
+            buttonInvert.show()
+            buttonBrightness.show()
+            buttonLight.show()
+        
     def on_PhotoOrganizer_original_size_clicked(self, widget):
         if os.path.isfile(self.imagePathOpened):
             pimage = Gtk.Image()
@@ -851,6 +983,27 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_frame_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         self.imageOpened.set_from_pixbuf(photoEffects.apply_frame(pixbuf)) 
+    
+    def on_PhotoOrganizer_detail_clicked(self, widget):
+        global totalPhotoDictionary 
+        self.currentPhoto = totalPhotoDictionary[self.imagePathOpened]
+        gpsText = "\ntaken at:"
+        dateText = "date:"
+        authorText = "\nby:"
+        descText = "\ndescription:"
+        modelText = "\ncamera:"
+        if self.currentPhoto.date:
+            dateText = dateText+self.currentPhoto.date
+        if self.currentPhoto.description:
+            descText = descText+self.currentPhoto.description
+        if self.currentPhoto.author:
+            authorText = authorText+self.currentPhoto.author
+        if self.currentPhoto.brand:
+            modelText = modelText+str(self.currentPhoto.brand)+","+str(self.currentPhoto.model)
+        if self.currentPhoto.latitude:
+            gpsText = gpsText+str(self.currentPhoto.latitude)+","+str(self.currentPhoto.longitude)
+        detailText = dateText+descText+authorText+modelText+gpsText
+        detailWindow = DetailWindow(self.imagePathOpened,detailText)
      
     def on_PhotoOrganizer_webcam_clicked(self,widget):
         #need to be sure a imagePanel is already created
