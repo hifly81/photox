@@ -1352,29 +1352,8 @@ class PhotoOrganizerGUI(Gtk.Window):
                     if(entry.url.index(mediaUrl)!=-1):
                         self.imageOpened.set_tooltip_text("user:"+entry.author+"\ndate:"+entry.creationDate+"\ntext:"+entry.text)
                         self.imageOpened.show_all()
-                        self.builder.get_object("detailsEntry").get_buffer().set_text("user:"+entry.author+"\ndate:"+entry.creationDate+"\ntext:"+entry.text)
                 except:
                     pass
-        else:
-            self.builder.get_object("detailsEntry").get_buffer().set_text("")
-            global totalPhotoDictionary 
-            self.currentPhoto = totalPhotoDictionary[imagePath]
-            gpsText = "\ntaken at:"
-            dateText = "date:"
-            authorText = "\nby:"
-            descText = "\ndescription:"
-            modelText = "\ncamera:"
-            if self.currentPhoto.date:
-                dateText = dateText+self.currentPhoto.date
-            if self.currentPhoto.description:
-                descText = descText+self.currentPhoto.description
-            if self.currentPhoto.author:
-                authorText = authorText+self.currentPhoto.author
-            if self.currentPhoto.brand:
-                modelText = modelText+str(self.currentPhoto.brand)+","+str(self.currentPhoto.model)
-            if self.currentPhoto.latitude:
-                gpsText = gpsText+str(self.currentPhoto.latitude)+","+str(self.currentPhoto.longitude)
-            self.builder.get_object("detailsEntry").get_buffer().set_text(dateText+descText+authorText+modelText+gpsText)
     
     def createImagePanel(self,pimage):    
         imagePanel = self.builder.get_object("imagePanel")
@@ -1499,9 +1478,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         monthDictionary = {}
         # create the treestore; the model has one column of type string
         treestore = Gtk.TreeStore(str)
-        treestore.set_sort_column_id(0,Gtk.SortType.DESCENDING)
+        #treestore.set_sort_column_id(0,Gtk.SortType.DESCENDING)
+        albumCollection.albums.sort()
         for album in albumCollection.albums:
-            
             listYearValue = yearDictionary.get(album.year) 
             if listYearValue is None:
                 piter = treestore.append(None, ['%s' % album.year])

@@ -13,6 +13,7 @@ import imghdr
 import logging
 import logging.config
 from datetime import datetime
+from time import strptime
 from gi.repository import Gtk
 from PIL import Image
 from PIL.ExifTags import TAGS,GPSTAGS
@@ -55,6 +56,15 @@ class Album:
     # path of the album
     self.title = None
     self.pics = []
+  
+  #this is for sorting
+  def __lt__(self, other):
+      monthSelf =  strptime(self.month,'%B').tm_mon
+      monthOther =  strptime(other.month,'%B').tm_mon
+      if self.year == other.year:
+          return monthSelf > monthOther
+      else:
+          return self.year > other.year and monthSelf > monthOther
 
 class AlbumCollection:    
   def __init__(self):

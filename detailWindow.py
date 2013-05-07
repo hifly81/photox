@@ -20,7 +20,10 @@ class DetailWindow (TransparentWindow):
         textview = Gtk.TextView()
         textview.get_buffer().set_text(detailText)
         #main box
+        buttonClose = Gtk.Button("Close")
+        buttonClose.connect("clicked", lambda w: self.destroy())
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6)
+        box.pack_start(buttonClose, False, False, 0)
         box.pack_start(eventBox, False, False, 0)
         box.pack_start(textview, False, False, 0)
         self.add(box)
