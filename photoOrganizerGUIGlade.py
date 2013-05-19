@@ -216,6 +216,8 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.entry_folder_text = None
         self.hiddenFolders = None
         self.peopleTag = None
+        #stack containing the effects called
+        self.effectStack = []
         self.mainEditMenuOpened = False
         self.mainOtherMenuOpened = False
         self.mainEffectsMenuOpened = False
@@ -511,19 +513,19 @@ class PhotoOrganizerGUI(Gtk.Window):
                     boxBottom.remove(childEl)
             buttonRotateLeft = Gtk.Button("Rotate Left")
             buttonRotateLeft.set_size_request(50,20)
-            buttonRotateLeft.connect("clicked", self.on_PhotoOrganizer_rotate_clicked)
+            buttonRotateLeft.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_rotate_clicked,True))
             buttonRotateRight = Gtk.Button("Rotate Right")
             buttonRotateRight.set_size_request(50,20)
-            buttonRotateRight.connect("clicked", self.on_PhotoOrganizer_rotate_right_clicked)
+            buttonRotateRight.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_rotate_right_clicked,True))
             buttonMirror = Gtk.Button("Mirror")
             buttonMirror.set_size_request(50,20)
-            buttonMirror.connect("clicked", self.on_PhotoOrganizer_mirror_clicked)
+            buttonMirror.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_mirror_clicked,True))
             buttonFlip = Gtk.Button("Flip")
             buttonFlip.set_size_request(50,20)
-            buttonFlip.connect("clicked", self.on_PhotoOrganizer_flip_clicked)
+            buttonFlip.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_flip_clicked,True))
             buttonCrop = Gtk.Button("Crop")
             buttonCrop.set_size_request(50,20)
-            buttonCrop.connect("clicked", self.on_PhotoOrganizer_crop_clicked)
+            buttonCrop.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_crop_clicked,True))
             buttonResize = Gtk.Button("Resize")
             buttonResize.set_size_request(50,20)
             boxBottom.pack_start(buttonRotateLeft, False, False, 0)
@@ -556,10 +558,10 @@ class PhotoOrganizerGUI(Gtk.Window):
                     boxBottom.remove(childEl)
             buttonSharpness = Gtk.Button("Sharpness")
             buttonSharpness.set_size_request(50,20)
-            buttonSharpness.connect("clicked", self.on_PhotoOrganizer_sharpness_clicked)
+            buttonSharpness.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sharpness_clicked,True))
             buttonDeform = Gtk.Button("Deform")
             buttonDeform.set_size_request(50,20)
-            buttonDeform.connect("clicked", self.on_PhotoOrganizer_deform_clicked)
+            buttonDeform.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_deform_clicked,True))
             boxBottom.pack_start(buttonSharpness, False, False, 0)
             boxBottom.pack_start(buttonDeform, False, False, 0)
             buttonSharpness.show()
@@ -582,19 +584,19 @@ class PhotoOrganizerGUI(Gtk.Window):
                     boxBottom.remove(childEl)
             buttonBordered = Gtk.Button("Border")
             buttonBordered.set_size_request(50,20)
-            buttonBordered.connect("clicked",self.on_PhotoOrganizer_border_clicked)
+            buttonBordered.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_border_clicked,True))
             buttonUnbordered = Gtk.Button("Unborder")
             buttonUnbordered.set_size_request(50,20)
-            buttonUnbordered.connect("clicked", self.on_PhotoOrganizer_unborder_clicked)
+            buttonUnbordered.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_unborder_clicked,True))
             buttonPolaroid = Gtk.Button("Polaroid")
             buttonPolaroid.set_size_request(50,20)
-            buttonPolaroid.connect("clicked", self.on_PhotoOrganizer_polaroid_clicked)
+            buttonPolaroid.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_polaroid_clicked,True))
             buttonFrame = Gtk.Button("Frame")
             buttonFrame.set_size_request(50,20)
-            buttonFrame.connect("clicked", self.on_PhotoOrganizer_frame_clicked)
+            buttonFrame.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_frame_clicked,True))
             buttonWatermark = Gtk.Button("Watermark")
             buttonWatermark.set_size_request(50,20)
-            buttonWatermark.connect("clicked", self.on_PhotoOrganizer_watermark_clicked)
+            buttonWatermark.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_watermark_clicked,True))
             boxBottom.pack_start(buttonBordered, False, False, 0)
             boxBottom.pack_start(buttonUnbordered, False, False, 0)
             boxBottom.pack_start(buttonPolaroid, False, False, 0)
@@ -623,24 +625,24 @@ class PhotoOrganizerGUI(Gtk.Window):
                     boxBottom.remove(childEl)
             buttonHistogram = Gtk.Button("Histogram")
             buttonHistogram.set_size_request(50,20)
-            buttonHistogram.connect("clicked", self.on_PhotoOrganizer_histogram_clicked)
+            buttonHistogram.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_histogram_clicked,True))
             buttonTagpeople = Gtk.Button("Tag People")
             buttonTagpeople.set_size_request(50,20)
-            buttonTagpeople.connect("clicked", self.on_PhotoOrganizer_tagPeople_clicked)
+            buttonTagpeople.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_tagPeople_clicked,True))
             buttonWebcam = Gtk.Button("Webcam")
             buttonWebcam.set_size_request(50,20)
-            buttonWebcam.connect("clicked", self.on_PhotoOrganizer_webcam_clicked)
+            buttonWebcam.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_webcam_clicked,True))
             buttonGrab = Gtk.Button("Grab")
             buttonGrab.set_size_request(50,20)
             buttonOriginalsize = Gtk.Button("Original Size")
             buttonOriginalsize.set_size_request(50,20)
-            buttonOriginalsize.connect("clicked", self.on_PhotoOrganizer_original_size_clicked)
+            buttonOriginalsize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_original_size_clicked,False))
             buttonSave = Gtk.Button("Save")
             buttonSave.set_size_request(50,20)
-            buttonSave.connect("clicked", self.on_PhotoOrganizer_save_clicked)
+            buttonSave.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_save_clicked,False))
             buttonDetail = Gtk.Button("Detail")
             buttonDetail.set_size_request(50,20)
-            buttonDetail.connect("clicked", self.on_PhotoOrganizer_detail_clicked)
+            buttonDetail.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_detail_clicked,False))
             boxBottom.pack_start(buttonOriginalsize, False, False, 0)
             boxBottom.pack_start(buttonDetail, False, False, 0)
             boxBottom.pack_start(buttonHistogram, False, False, 0)
@@ -673,28 +675,28 @@ class PhotoOrganizerGUI(Gtk.Window):
                     boxBottom.remove(childEl)
             buttonGrey = Gtk.Button("Grey")
             buttonGrey.set_size_request(50,20)
-            buttonGrey.connect("clicked", self.on_PhotoOrganizer_greyscale_clicked)
+            buttonGrey.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_greyscale_clicked,True))
             buttonSepia = Gtk.Button("Sepia")
             buttonSepia.set_size_request(50,20)
-            buttonSepia.connect("clicked", self.on_PhotoOrganizer_sepia_clicked)
+            buttonSepia.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sepia_clicked,True))
             buttonSolarize = Gtk.Button("Solarize")
             buttonSolarize.set_size_request(50,20)
-            buttonSolarize.connect("clicked", self.on_PhotoOrganizer_solarize_clicked)
+            buttonSolarize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_solarize_clicked,True))
             buttonEqualize = Gtk.Button("Equalize")
             buttonEqualize.set_size_request(50,20)
-            buttonEqualize.connect("clicked", self.on_PhotoOrganizer_equalize_clicked)
+            buttonEqualize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_equalize_clicked,True))
             buttonDarkviolet = Gtk.Button("Dark Violet")
             buttonDarkviolet.set_size_request(50,20)
-            buttonDarkviolet.connect("clicked", self.on_PhotoOrganizer_darkViolet_clicked)
+            buttonDarkviolet.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_darkViolet_clicked,True))
             buttonLightgreen = Gtk.Button("Light Green")
             buttonLightgreen.set_size_request(50,20)
-            buttonLightgreen.connect("clicked", self.on_PhotoOrganizer_lightGreen_clicked)
+            buttonLightgreen.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_lightGreen_clicked,True))
             buttonWhite = Gtk.Button("White")
             buttonWhite.set_size_request(50,20)
-            buttonWhite.connect("clicked", self.on_PhotoOrganizer_white_clicked)
+            buttonWhite.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_white_clicked,True))
             buttonGreen = Gtk.Button("Green")
             buttonGreen.set_size_request(50,20)
-            buttonGreen.connect("clicked", self.on_PhotoOrganizer_green_clicked)
+            buttonGreen.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_green_clicked,True))
             boxBottom.pack_start(buttonGrey, False, False, 0)
             boxBottom.pack_start(buttonSepia, False, False, 0)
             boxBottom.pack_start(buttonSolarize, False, False, 0)
@@ -729,25 +731,25 @@ class PhotoOrganizerGUI(Gtk.Window):
                     boxBottom.remove(childEl)
             buttonBlur = Gtk.Button("Blur")
             buttonBlur.set_size_request(50,20)
-            buttonBlur.connect("clicked", self.on_PhotoOrganizer_blur_clicked)
+            buttonBlur.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_blur_clicked,True))
             buttonGaussian = Gtk.Button("Gaussian")
             buttonGaussian.set_size_request(50,20)
-            buttonGaussian.connect("clicked", self.on_PhotoOrganizer_gaussian_clicked)
+            buttonGaussian.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_gaussian_clicked,True))
             buttonContour = Gtk.Button("Contour")
             buttonContour.set_size_request(50,20)
-            buttonContour.connect("clicked", self.on_PhotoOrganizer_contour_clicked)
+            buttonContour.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_contour_clicked,True))
             buttonEdge = Gtk.Button("Edge")
             buttonEdge.set_size_request(50,20)
-            buttonEdge.connect("clicked", self.on_PhotoOrganizer_edge_clicked)
+            buttonEdge.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_edge_clicked,True))
             buttonEmboss = Gtk.Button("Emboss")
             buttonEmboss.set_size_request(50,20)
-            buttonEmboss.connect("clicked", self.on_PhotoOrganizer_emboss_clicked)
+            buttonEmboss.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_emboss_clicked,True))
             buttonSmooth = Gtk.Button("Smooth")
             buttonSmooth.set_size_request(50,20)
-            buttonSmooth.connect("clicked", self.on_PhotoOrganizer_smooth_clicked)
+            buttonSmooth.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_smooth_clicked,True))
             buttonSharpen = Gtk.Button("Sharpen")
             buttonSharpen.set_size_request(50,20)
-            buttonSharpen.connect("clicked", self.on_PhotoOrganizer_sharpen_clicked)
+            buttonSharpen.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sharpen_clicked,True))
             boxBottom.pack_start(buttonBlur, False, False, 0)
             boxBottom.pack_start(buttonGaussian, False, False, 0)
             boxBottom.pack_start(buttonContour, False, False, 0)
@@ -780,19 +782,19 @@ class PhotoOrganizerGUI(Gtk.Window):
                     boxBottom.remove(childEl)
             buttonColor = Gtk.Button("Color")
             buttonColor.set_size_request(50,20)
-            buttonColor.connect("clicked", self.on_PhotoOrganizer_color_clicked)
+            buttonColor.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_color_clicked,True))
             buttonColorize = Gtk.Button("Colorize")
             buttonColorize.set_size_request(50,20)
-            buttonColorize.connect("clicked", self.on_PhotoOrganizer_colorize_clicked)
+            buttonColorize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_colorize_clicked,True))
             buttonPosterize = Gtk.Button("Posterize")
             buttonPosterize.set_size_request(50,20)
-            buttonPosterize.connect("clicked", self.on_PhotoOrganizer_posterize_clicked)
+            buttonPosterize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_posterize_clicked,True))
             buttonContrast = Gtk.Button("Contrast")
             buttonContrast.set_size_request(50,20)
-            buttonContrast.connect("clicked", self.on_PhotoOrganizer_contrast_clicked)
+            buttonContrast.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_contrast_clicked,True))
             buttonAutocontrast = Gtk.Button("Autocontrast")
             buttonAutocontrast.set_size_request(50,20)
-            buttonAutocontrast.connect("clicked", self.on_PhotoOrganizer_autocontrast_clicked)
+            buttonAutocontrast.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_autocontrast_clicked,True))
             boxBottom.pack_start(buttonColor, False, False, 0)
             boxBottom.pack_start(buttonColorize, False, False, 0)
             boxBottom.pack_start(buttonPosterize, False, False, 0)
@@ -821,20 +823,28 @@ class PhotoOrganizerGUI(Gtk.Window):
                     boxBottom.remove(childEl)
             buttonInvert = Gtk.Button("Invert")
             buttonInvert.set_size_request(50,20)
-            buttonInvert.connect("clicked", self.on_PhotoOrganizer_invert_clicked)
+            buttonInvert.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_invert_clicked,True))
             buttonBrightness = Gtk.Button("Brightness")
             buttonBrightness.set_size_request(50,20)
-            buttonBrightness.connect("clicked", self.on_PhotoOrganizer_brightness_clicked)
+            buttonBrightness.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_brightness_clicked,True))
             buttonLight = Gtk.Button("Light")
             buttonLight.set_size_request(50,20)
-            buttonLight.connect("clicked", self.on_PhotoOrganizer_light_clicked)
+            buttonLight.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_light_clicked,True))
             boxBottom.pack_start(buttonInvert, False, False, 0)
             boxBottom.pack_start(buttonBrightness, False, False, 0)
             boxBottom.pack_start(buttonLight, False, False, 0)
             buttonInvert.show()
             buttonBrightness.show()
             buttonLight.show()
+    
+    
+    def on_apply_effects(self,widget,inner_function,put_in_stack):
+        print 'PRE FUNC'
+        eval(inner_function(self))
+        print 'POST FUNC'
+
         
+    
     def on_PhotoOrganizer_original_size_clicked(self, widget):
         if os.path.isfile(self.imagePathOpened):
             pimage = Gtk.Image()
@@ -1386,53 +1396,54 @@ class PhotoOrganizerGUI(Gtk.Window):
                imagePanel.show_all()
                while Gtk.events_pending():
                     Gtk.main_iteration_do(False)
-          else:          
-              self.subImageMap = imageMap[imagePath]
-              thubnailsSize = len(self.subImageMap.items())
-              tempRows = math.ceil(thubnailsSize/10)
-              tableRows = int(math.fabs(tempRows))
-              if tableRows==0:
-                  tableRows=1
-              thubnailWindow_table = Gtk.Table(tableRows, 10, True)
-              imagePanel.add(thubnailWindow_table)
-              left_attach = 0
-              right_attach = 1
-              top_attach = 0
-              bottom_attach = 1
-              for key, value in self.subImageMap.items():
-                   pimage = Gtk.Image()
-                   eventBox = Gtk.EventBox()
-                   eventBox.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-                   pixbuf = None
-                   if(self.twitterSearch):
-                        value.fileName = value.fileName[value.fileName.index('http'):]
-                        response=urllib2.urlopen(value.fileName)
-                        loader=GdkPixbuf.PixbufLoader()
-                        loader.write(response.read())
-                        loader.close() 
-                        eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,value.fileName)
-                        pixbuf = loader.get_pixbuf()
-                   else:
-                       eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,imagePath+"/"+value.fileName)
-                       pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath+"/"+value.fileName)           
-                   scaled_buf = pixbuf.scale_simple(60,60,GdkPixbuf.InterpType.BILINEAR)
-                   pimage.set_from_pixbuf(scaled_buf)
-                   eventBox.add(pimage)
-                   thubnailWindow_table.attach(eventBox,left_attach,right_attach,top_attach,bottom_attach)
-                   thubnailWindow_table.set_col_spacings(5)
-                   if right_attach <10:
-                       right_attach+=1
-                       left_attach+=1
-                   else:
-                     left_attach = 0  
-                     right_attach = 1  
-                     top_attach+=1 
-                     bottom_attach+=1   
-                   self.thubnailPanel[imagePath] = thubnailWindow_table
-                   imagePanel.show_all()
-                   while Gtk.events_pending():
-                        Gtk.main_iteration_do(False)
-    
+          else: 
+              if imagePath in imageMap:        
+                  self.subImageMap = imageMap[imagePath]
+                  thubnailsSize = len(self.subImageMap.items())
+                  tempRows = math.ceil(thubnailsSize/10)
+                  tableRows = int(math.fabs(tempRows))
+                  if tableRows==0:
+                      tableRows=1
+                  thubnailWindow_table = Gtk.Table(tableRows, 10, True)
+                  imagePanel.add(thubnailWindow_table)
+                  left_attach = 0
+                  right_attach = 1
+                  top_attach = 0
+                  bottom_attach = 1
+                  for key, value in self.subImageMap.items():
+                       pimage = Gtk.Image()
+                       eventBox = Gtk.EventBox()
+                       eventBox.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+                       pixbuf = None
+                       if(self.twitterSearch):
+                            value.fileName = value.fileName[value.fileName.index('http'):]
+                            response=urllib2.urlopen(value.fileName)
+                            loader=GdkPixbuf.PixbufLoader()
+                            loader.write(response.read())
+                            loader.close() 
+                            eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,value.fileName)
+                            pixbuf = loader.get_pixbuf()
+                       else:
+                           eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,imagePath+"/"+value.fileName)
+                           pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath+"/"+value.fileName)           
+                       scaled_buf = pixbuf.scale_simple(60,60,GdkPixbuf.InterpType.BILINEAR)
+                       pimage.set_from_pixbuf(scaled_buf)
+                       eventBox.add(pimage)
+                       thubnailWindow_table.attach(eventBox,left_attach,right_attach,top_attach,bottom_attach)
+                       thubnailWindow_table.set_col_spacings(5)
+                       if right_attach <10:
+                           right_attach+=1
+                           left_attach+=1
+                       else:
+                         left_attach = 0  
+                         right_attach = 1  
+                         top_attach+=1 
+                         bottom_attach+=1   
+                       self.thubnailPanel[imagePath] = thubnailWindow_table
+                       imagePanel.show_all()
+                       while Gtk.events_pending():
+                            Gtk.main_iteration_do(False)
+        
     def callScanPhoto(self):
         loadWindow = LoadingWindow()
         

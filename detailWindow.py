@@ -28,4 +28,6 @@ class DetailWindow (TransparentWindow):
         box.pack_start(textview, False, False, 0)
         self.add(box)
         pimage.show()
+        #center the window
+        self.set_position(Gtk.WindowPosition.CENTER) 
         self.show_all()

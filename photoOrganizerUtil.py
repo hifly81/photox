@@ -21,7 +21,6 @@ from PIL.ExifTags import TAGS,GPSTAGS
 logging.config.fileConfig('config/logging.conf')
 logger = logging.getLogger('photoOrganizer')
 
-#class which stores img info
 class PeopleTag:
   def __init__(self):
     self.totalPics = None
@@ -57,7 +56,6 @@ class Album:
     self.title = None
     self.pics = []
   
-  #this is for sorting
   def __lt__(self, other):
       monthSelf =  strptime(self.month,'%B').tm_mon
       monthOther =  strptime(other.month,'%B').tm_mon
