@@ -839,12 +839,13 @@ class PhotoOrganizerGUI(Gtk.Window):
     
     
     def on_apply_effects(self,widget,inner_function,put_in_stack):
-        print 'PRE FUNC'
-        eval(inner_function(self))
-        print 'POST FUNC'
-
-        
-    
+        func_name = inner_function.__name__
+        methodToCall = getattr(self, func_name)
+        result = methodToCall(self)
+        #put the function in stack
+        if put_in_stack is True:
+            self.effectStack.append(methodToCall)
+            
     def on_PhotoOrganizer_original_size_clicked(self, widget):
         if os.path.isfile(self.imagePathOpened):
             pimage = Gtk.Image()
