@@ -218,6 +218,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.peopleTag = None
         #stack containing the effects called
         self.effectStack = []
+        #the following fields keep which button panel has been opened
         self.mainEditMenuOpened = False
         self.mainOtherMenuOpened = False
         self.mainEffectsMenuOpened = False
@@ -226,6 +227,8 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.mainFilterMenuOpened = False
         self.mainColorMenuOpened = False
         self.mainLightMenuOpened = False
+        #if the last panel opened was a drawing area
+        self.drawingAreaOpened = False
 
         #build GUI from glade
         self.builder = Gtk.Builder()
@@ -839,6 +842,12 @@ class PhotoOrganizerGUI(Gtk.Window):
     
     
     def on_apply_effects(self,widget,inner_function,put_in_stack):
+        if self.drawingAreaOpened is True:
+            newImage = Gtk.Image()
+            pixbuf = photoEffects.fromImageToPixbuf(self.image)
+            newImage.set_from_pixbuf(pixbuf)
+            self.createImagePanel(newImage)
+            self.imageOpened = newImage
         func_name = inner_function.__name__
         methodToCall = getattr(self, func_name)
         result = methodToCall(self)
@@ -1107,7 +1116,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         cross_cursor = Gdk.Cursor(Gdk.CursorType.CROSSHAIR)
         imagePanel.get_window().set_cursor(cross_cursor)
         self.darea.set_size_request(pixbuf.get_width(),pixbuf.get_height())
+        #this add to the image panel a drwaing area
         imagePanel.add_with_viewport(self.darea)
+        self.drawingAreaOpened = True
         #before showing need to get faces coordinates
         self.faces = []
         loadWindow = LoadingWindow()
@@ -1229,15 +1240,17 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.imageForDrawing = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
         self.imageForDrawingStart = True
         self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.POINTER_MOTION_MASK) 
-        self.darea.connect("draw", self.on_drawing_area_draw)
-        self.darea.connect("button-press-event", self.on_drawing_area_button_press)
-        self.darea.connect("button-release-event", self.on_drawing_area_button_release)
-        self.darea.connect("motion_notify_event", self.on_drawing_area_button_move) 
+        self.darea.connect("draw", self.on_drawing_area_crop_draw)
+        self.darea.connect("button-press-event", self.on_drawing_area_crop_button_press)
+        self.darea.connect("button-release-event", self.on_drawing_area_crop_button_release)
+        self.darea.connect("motion_notify_event", self.on_drawing_area_crop_button_move) 
         self.darea.set_size_request(pixbuf.get_width(),pixbuf.get_height())
+        #this add to the image panel a drwaing area
         imagePanel.add_with_viewport(self.darea)
+        self.drawingAreaOpened = True
         imagePanel.show_all()
     
-    def on_drawing_area_draw(self, wid, cr):
+    def on_drawing_area_crop_draw(self, wid, cr):
         #the image cannot be loaded every time --> repaint
         if self.imageForDrawingStart == True:
             self.buffer = StringIO.StringIO()
@@ -1294,21 +1307,19 @@ class PhotoOrganizerGUI(Gtk.Window):
             cr.paint()
             cr.restore()
 
-           
-    
-    def on_drawing_area_button_release(self, w, e):
+    def on_drawing_area_crop_button_release(self, w, e):
         self.coords.append([e.x, e.y])
         self.darea.queue_draw()
         self.deleteCoords = True
         self.startAppend = False
     
-    def on_drawing_area_button_move(self, w, e):
+    def on_drawing_area_crop_button_move(self, w, e):
         if(self.startAppend == True):
             self.coords.append([e.x, e.y])
             self.darea.queue_draw()
             self.deleteCoords = False
                                   
-    def on_drawing_area_button_press(self, w, e):
+    def on_drawing_area_crop_button_press(self, w, e):
         if e.type == Gdk.EventType.BUTTON_PRESS and e.button == 1:
             self.coords.append([e.x, e.y])
             self.startAppend = True
