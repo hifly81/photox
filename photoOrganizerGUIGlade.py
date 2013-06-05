@@ -245,6 +245,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_mainFilter_clicked":self.on_PhotoOrganizer_mainFilter_clicked,
                     "on_PhotoOrganizer_mainColor_clicked":self.on_PhotoOrganizer_mainColor_clicked,
                     "on_PhotoOrganizer_mainLight_clicked":self.on_PhotoOrganizer_mainLight_clicked,
+                    "on_PhotoOrganizer_notebook_switch": self.on_PhotoOrganizer_notebook_switch,
         }
         #handler of GUI signals
         self.builder.connect_signals(handlers)
@@ -256,11 +257,13 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.window = self.builder.get_object("PhotoOrganizer")
         self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)   
         #center the window
-        self.window.set_position(Gtk.WindowPosition.CENTER)       
+        self.window.set_position(Gtk.WindowPosition.CENTER) 
         #maximize the window 
         self.window.maximize()
         self.window.show_all()
-        
+        #hide some elements
+        self.builder.get_object("box2").set_visible(False)      
+     
         #load pref at startup, including albums saved
         self.loadPreferences()
 
@@ -839,6 +842,12 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonInvert.show()
             buttonBrightness.show()
             buttonLight.show()
+    
+    def on_PhotoOrganizer_notebook_switch(self,obj1,obj2,i):
+        if self.builder.get_object("notebook1").get_current_page() == 0:
+            self.builder.get_object("box2").set_visible(True)
+        else:
+            self.builder.get_object("box2").set_visible(False)
     
     
     def on_apply_effects(self,widget,inner_function,put_in_stack):
@@ -1478,6 +1487,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         imageMap= {}
         # call retrieve album list
         albumCollection,imageDictionary,photoDictionary = photoOrganizerUtil.walkDir(self.searchEntry,self.hiddenFolders,statusBar,context,treestore,treeview,imageMap,leftPanel)
+        self.entry_folder_text = self.searchEntry
         self.lastAlbumCollectionScanned = albumCollection 
         global totalPhotoDictionary 
         totalPhotoDictionary = photoDictionary
@@ -1568,6 +1578,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                 self.createFixedPhotoTree(self.photoOrganizerPref.albumCollection,self.photoOrganizerPref.peopleTag,treeview)
                 #rebuild photo indexes
                 self.lastAlbumCollectionScanned = self.photoOrganizerPref.albumCollection
+                #list of albums previously saved
                 savedAlbums = self.photoOrganizerPref.albumCollection
                 for album in savedAlbums.albums:
                     for photo in album.pics:
@@ -1589,6 +1600,17 @@ class PhotoOrganizerGUI(Gtk.Window):
                     scan = UpdateAlbum(album,treeview.get_model(),statusBar,context)
                     threads.append(scan)
                     scan.start()
+                #check if there are new albums
+                self.photoOrganizerPref.lastSearch
+                for (path, dirs, files) in os.walk(self.photoOrganizerPref.lastSearch):
+                    foundAlbum = False
+                    for album in savedAlbums.albums:
+                        if path == album.title:
+                            foundAlbum = True
+                            break
+                    if foundAlbum == False:
+                        print path
+                    
 
 
             #some pref properties stored could be not present --> no previous search available

@@ -62,7 +62,7 @@ class Album:
       if self.year == other.year:
           return monthSelf > monthOther
       else:
-          return self.year > other.year and monthSelf > monthOther
+          return self.year > other.year
 
 class AlbumCollection:    
   def __init__(self):
