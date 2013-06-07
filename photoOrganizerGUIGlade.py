@@ -9,6 +9,7 @@ Created on Mar 01, 2013
 
 import os
 import math
+import time
 import urllib2
 import logging.config
 import twitterUtil
@@ -19,6 +20,8 @@ import StringIO
 import Image
 import imghdr
 import threading
+from datetime import datetime
+from time import strptime
 from transparentWindow import TransparentWindow
 from detailWindow import DetailWindow
 from entryCompletion import EntryCompletion
@@ -114,6 +117,119 @@ UI_INFO = """
 </ui>
 """
 
+class NewAlbum(threading.Thread):
+    def __init__(self,path,treestore,statusBar,context,albumCollection):
+        #ref to path to scan
+        self.path = path
+        #ref to tree element
+        self.treestore = treestore
+        #ref to status bar
+        self.statusBar = statusBar
+        self.context = context
+        self.albumCollection = albumCollection 
+        threading.Thread.__init__(self)
+              
+    def run(self):
+        for (path, dirs,files) in os.walk(self.path):
+            minYearFound = None
+            minMonthFoundAsNumber = None
+            minMonthFound = None
+            album = Album()
+            album.title = path
+            for file in files:
+                #extract creation date
+                fileCreationDate = time.ctime(os.path.getctime(path+"/"+file))
+                fileDateTime = datetime.strptime(fileCreationDate, "%a %b %d %H:%M:%S %Y")
+                fileDateTimeYear = fileDateTime.year
+                fileDateTimeMonthAsNumber = fileDateTime.month
+                fileDateTimeMonth = fileDateTime.strftime("%B")
+                if minYearFound is None:
+                    minYearFound = fileDateTimeYear
+                if minMonthFound is None:
+                   minMonthFound =  fileDateTimeMonth  
+                   minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                if fileDateTimeYear < minYearFound:
+                    minYearFound = fileDateTimeYear
+                    minMonthFound =  fileDateTimeMonth
+                    minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                else:
+                    if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                        minMonthFound =  fileDateTimeMonth
+                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber 
+                #img is not in a previous scanning
+                try:
+                    if imghdr.what(self.path+"/"+file)!=None:
+                        photoFile = photoOrganizerUtil.get_exif_data(self.path+"/"+file)
+                        if photoFile==None:
+                            photoFile = PhotoFile()  
+                        photoFile.dirName = path
+                        photoFile.fileName = file
+                        photoFile.shortName = photoFile.fileName
+                        #extract photo date
+                        if photoFile.date is not None:
+                            photoFileDateAsTime = datetime.strptime(photoFile.date, "%Y:%m:%d %H:%M:%S")
+                            fileDateTimeYear = photoFileDateAsTime.year
+                            fileDateTimeMonthAsNumber = photoFileDateAsTime.month
+                            fileDateTimeMonth = photoFileDateAsTime.strftime("%B")
+                        if minYearFound is None:
+                            minYearFound = fileDateTimeYear
+                        if minMonthFound is None:
+                            minMonthFound =  fileDateTimeMonth  
+                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                        if fileDateTimeYear < minYearFound:
+                            minYearFound = fileDateTimeYear
+                            minMonthFound =  fileDateTimeMonth
+                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                        else:
+                            if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                                minMonthFound =  fileDateTimeMonth
+                                minMonthFoundAsNumber = fileDateTimeMonthAsNumber 
+                        
+                        #add to dic
+                        totalPhotoDictionary[self.path+"/"+file] = photoFile
+                        #update imageMap
+                        subImageMap = {}
+                        subImageMap[photoFile.fileName] = photoFile
+                        if imageMap.get(self.path) is None:
+                            imageMap[self.path] = subImageMap
+                        else:
+                            imageMap[self.path].update(subImageMap)
+                        album.pics.append(photoFile)
+                except:
+                    pass
+            
+            if len(album.pics) >0 : 
+                #must set album year and month   
+                album.year =  minYearFound
+                album.month = minMonthFound
+                self.albumCollection.albums.append(album) 
+                #must find the right piter
+                rowIndex = 0
+                piter = None
+                for row in self.treestore:
+                    iterPath = Gtk.TreePath(rowIndex)
+                    treeiter = self.treestore.get_iter(iterPath)
+                    treeiterValue = self.treestore[treeiter][:]
+                    if str(album.year) in treeiterValue:
+                        treeiterChild = self.treestore.iter_children(treeiter)
+                        while treeiterChild is not None:
+                            treeiterChildValue = self.treestore[treeiterChild][:]
+                            if str(album.month) in treeiterChildValue:
+                                piter = treeiterChild
+                            treeiterChild = self.treestore.iter_next(treeiterChild)
+                    rowIndex+=1
+                
+                if piter is not None:
+                    piter = self.treestore.append(piter, ['%s' % album.title])
+                else:
+                    piter = self.treestore.append(None, ['%s' % album.title])
+                for photo in album.pics:
+                    self.treestore.append(piter, ['%s' %album.title+"/"+photo.fileName])
+                    self.statusBar.push(self.context,"added:"+self.path+"/"+file)
+                    while Gtk.events_pending():
+                        Gtk.main_iteration_do(False)
+              
+            
 class UpdateAlbum(threading.Thread):
     def __init__(self,album,treestore,statusBar,context):
         #ref to album
@@ -246,6 +362,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     "on_PhotoOrganizer_mainColor_clicked":self.on_PhotoOrganizer_mainColor_clicked,
                     "on_PhotoOrganizer_mainLight_clicked":self.on_PhotoOrganizer_mainLight_clicked,
                     "on_PhotoOrganizer_notebook_switch": self.on_PhotoOrganizer_notebook_switch,
+                    "on_PhotoOrganizer_save_clicked": self.on_PhotoOrganizer_save_clicked,
         }
         #handler of GUI signals
         self.builder.connect_signals(handlers)
@@ -643,9 +760,6 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonOriginalsize = Gtk.Button("Original Size")
             buttonOriginalsize.set_size_request(50,20)
             buttonOriginalsize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_original_size_clicked,False))
-            buttonSave = Gtk.Button("Save")
-            buttonSave.set_size_request(50,20)
-            buttonSave.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_save_clicked,False))
             buttonDetail = Gtk.Button("Detail")
             buttonDetail.set_size_request(50,20)
             buttonDetail.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_detail_clicked,False))
@@ -655,13 +769,11 @@ class PhotoOrganizerGUI(Gtk.Window):
             boxBottom.pack_start(buttonTagpeople, False, False, 0)
             boxBottom.pack_start(buttonWebcam, False, False, 0)
             boxBottom.pack_start(buttonGrab, False, False, 0)
-            boxBottom.pack_start(buttonSave, False, False, 0)
             buttonHistogram.show()
             buttonTagpeople.show()
             buttonWebcam.show()
             buttonGrab.show()
             buttonOriginalsize.show()
-            buttonSave.show()
             buttonDetail.show()
     
     def on_PhotoOrganizer_mainEffects_clicked(self,widget):
@@ -1609,7 +1721,10 @@ class PhotoOrganizerGUI(Gtk.Window):
                             foundAlbum = True
                             break
                     if foundAlbum == False:
-                        print path
+                        #need to add the new album
+                        if path != self.photoOrganizerPref.lastSearch:
+                            scan = NewAlbum(path,treeview.get_model(),statusBar,context,self.lastAlbumCollectionScanned)
+                            scan.start()
                     
 
 
