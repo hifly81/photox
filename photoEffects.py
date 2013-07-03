@@ -19,12 +19,14 @@ IMAGE_MODE_L = "L"
 MAX_VALUE_COLOR = 255
 SEPIA_RGB = (255, 240, 192)
 
+
 class CustomGuassianBlur(ImageFilter.Filter):
     def __init__(self, radius=5):
         self.radius = radius
     
     def filter(self, image):
         return image.gaussian_blur(self.radius)
+
 
 class BasicDeformer:
     def getmesh(self, im):

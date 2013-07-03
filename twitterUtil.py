@@ -22,18 +22,20 @@ TWEET_CREATEDAT = "created_at"
 TWEET_MEDIAURLHTTPS = "media_url_https"
 TWITTER_SEARCH_QUERY = "http://search.twitter.com/search.json?q="
 
+
 #wrapper for twitter search results
 class TwitterSearchResult:    
   def __init__(self):
     self.query = None
     self.entries = []
 
+
 #twitter entry derived from a search
 class TwitterEntry:
   def __init__(self):
     #attributes extracted from twitter result
     self.author = None
-    self.text = None 
+    self.text = None
     self.url = None
     self.creationDate = None
 
@@ -49,11 +51,11 @@ def searchMediaTweets(query,numberOfTweets):
        raise Exception("Can't contact twitter url. Check your internet connection!")
     dict = simplejson.loads(search.read())
     twitterSearchResult = TwitterSearchResult()
-    for result in dict[TWEET_RESULTS]: 
+    for result in dict[TWEET_RESULTS]:
         for entities in result[TWEET_ENTITIES]:
-            if(entities==TWEET_MEDIA):
-                for subEntities in result[TWEET_ENTITIES][entities]:   
-                    twitterEntry =  TwitterEntry()
+            if entities == TWEET_MEDIA:
+                for subEntities in result[TWEET_ENTITIES][entities]:
+                    twitterEntry = TwitterEntry()
                     twitterEntry.author = result[TWEET_FROMUSER]
                     twitterEntry.text = result[TWEET_TEXT]
                     twitterEntry.creationDate = result[TWEET_CREATEDAT]
