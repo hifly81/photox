@@ -1773,7 +1773,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                         if path == album.title:
                             foundAlbum = True
                             break
-                    if foundAlbum == False:
+                    if foundAlbum is False:
                         #need to add the new album
                         if path != self.photoOrganizerPref.lastSearch:
                             scan = NewAlbum(path,treeview.get_model(),statusBar,context,self.lastAlbumCollectionScanned)
