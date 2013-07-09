@@ -483,6 +483,8 @@ class PhotoOrganizerGUI(Gtk.Window):
              self.on_PhotoOrganizer_frame_clicked),
             ("EditDetail", Gtk.STOCK_SAVE, "Detail", "<control><alt>S", None,
              self.on_PhotoOrganizer_detail_clicked),
+            ("EditGrabDesktop", Gtk.STOCK_SAVE, "Grab_Desktop", "<control><alt>G", None,
+             self.on_PhotoOrganizer_grabDesktop_clicked),
             ])
         uimanager = Gtk.UIManager()
         # Throws exception if something went wrong
@@ -760,6 +762,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonWebcam.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_webcam_clicked,True))
             buttonGrab = Gtk.Button("Grab")
             buttonGrab.set_size_request(50,20)
+            buttonGrab.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_grabDesktop_clicked,Trueg))
             buttonOriginalsize = Gtk.Button("Original Size")
             buttonOriginalsize.set_size_request(50,20)
             buttonOriginalsize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_original_size_clicked,False))
@@ -1163,6 +1166,13 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_frame_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
         new_buf = photoEffects.apply_frame(pixbuf)
+        return new_buf
+
+    def on_PhotoOrganizer_grabDesktop_clicked(self,widget):
+        #need to be sure a imagePanel is already created
+        if len(self.builder.get_object("imagePanel").get_children())==0:
+            self.createImagePanel(None)
+        new_buf = photoEffects.captureDesktopImage()
         return new_buf
 
     def on_PhotoOrganizer_detail_clicked(self, widget):

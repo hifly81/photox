@@ -12,6 +12,7 @@ import cv2.cv as cv
 import os
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
 from PIL import Image,ImageOps,ImageFilter,ImageEnhance,ImageDraw,ImageFont
+import cairo
 
 #constants
 RGB = "RGB"
@@ -419,3 +420,17 @@ def captureWebcamImage():
     
     return fromImageToPixbuf(pi)
 
+def captureDesktopImage():
+    #capture entire desktop
+    root_win = Gdk.get_default_root_window()
+    width = root_win.get_width()
+    height = root_win.get_height()
+    ims = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+    pb = Gdk.pixbuf_get_from_window(root_win, 0, 0, width, height)
+    cr = cairo.Context(ims)
+    Gdk.cairo_set_source_pixbuf(cr, pb, 0, 0)
+    cr.paint()
+
+
+    #ims.write_to_png("screenshot.png")
+    return pb
