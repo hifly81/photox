@@ -430,7 +430,4 @@ def captureDesktopImage():
     cr = cairo.Context(ims)
     Gdk.cairo_set_source_pixbuf(cr, pb, 0, 0)
     cr.paint()
-
-
-    #ims.write_to_png("screenshot.png")
     return pb
