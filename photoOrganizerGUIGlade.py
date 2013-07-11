@@ -12,7 +12,6 @@ import math
 import time
 import urllib2
 import logging.config
-import twitterUtil
 import photoOrganizerStorage
 import photoOrganizerUtil
 import photoEffects
@@ -138,7 +137,7 @@ class NewAlbum(threading.Thread):
             album.title = path
             for file in files:
                 #extract creation date
-                fileCreationDate = time.ctime(os.path.getctime(path+"/"+file))
+                fileCreationDate = time.ctime(os.path.getctime(path+os.sep+file))
                 fileDateTime = datetime.strptime(fileCreationDate, "%a %b %d %H:%M:%S %Y")
                 fileDateTimeYear = fileDateTime.year
                 fileDateTimeMonthAsNumber = fileDateTime.month
@@ -158,8 +157,8 @@ class NewAlbum(threading.Thread):
                         minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                         #img is not in a previous scanning
                 try:
-                    if imghdr.what(self.path+"/"+file) is not None:
-                        photoFile = photoOrganizerUtil.get_exif_data(self.path+"/"+file)
+                    if imghdr.what(self.path+os.sep+file) is not None:
+                        photoFile = photoOrganizerUtil.get_exif_data(self.path+os.sep+file)
                         if photoFile is None:
                             photoFile = PhotoFile()
                         photoFile.dirName = path
@@ -186,7 +185,7 @@ class NewAlbum(threading.Thread):
                                 minMonthFoundAsNumber = fileDateTimeMonthAsNumber
 
                                 #add to dic
-                        totalPhotoDictionary[self.path + "/" +file] = photoFile
+                        totalPhotoDictionary[self.path + os.sep +file] = photoFile
                         #update imageMap
                         subImageMap = {}
                         subImageMap[photoFile.fileName] = photoFile
@@ -200,7 +199,7 @@ class NewAlbum(threading.Thread):
 
             if len(album.pics) >0 :
             #must set album year and month
-                album.year =  minYearFound
+                album.year = minYearFound
                 album.month = minMonthFound
                 self.albumCollection.albums.append(album)
                 #must find the right piter
@@ -224,8 +223,8 @@ class NewAlbum(threading.Thread):
                 else:
                     piter = self.treestore.append(None, ['%s' % album.title])
                 for photo in album.pics:
-                    self.treestore.append(piter, ['%s' %album.title+"/"+photo.fileName])
-                    self.statusBar.push(self.context,"added:"+self.path+"/"+file)
+                    self.treestore.append(piter, ['%s' %album.title+os.sep+photo.fileName])
+                    self.statusBar.push(self.context,"added:"+self.path+os.sep+file)
                     while Gtk.events_pending():
                         Gtk.main_iteration_do(False)
 
@@ -260,10 +259,10 @@ class UpdateAlbum(threading.Thread):
     def run(self):
         for (path, dirs,files) in os.walk(self.path):
             for file in files:
-                key = totalPhotoDictionary.get(self.path+"/"+file, None )
+                key = totalPhotoDictionary.get(self.path+os.sep+file, None )
                 if key is None:
                     #img is not in a previous scanning
-                    if imghdr.what(self.path+"/"+file)!=None:
+                    if imghdr.what(self.path+os.sep+file)!=None:
                         rowIndex = 0
                         for row in self.treestore:
                             iterPath = Gtk.TreePath(rowIndex)
@@ -274,11 +273,11 @@ class UpdateAlbum(threading.Thread):
                                 while treeiter2Child is not None:
                                     treeiter2ChildValue = self.treestore[treeiter2Child][:]
                                     if self.path in treeiter2ChildValue:
-                                        self.treestore.append(treeiter2Child,['%s' %self.path+"/"+file])
-                                        self.statusBar.push(self.context,"added:"+self.path+"/"+file)
+                                        self.treestore.append(treeiter2Child,['%s' %self.path+os.sep+file])
+                                        self.statusBar.push(self.context,"added:"+self.path+os.sep+file)
                                         while Gtk.events_pending():
                                             Gtk.main_iteration_do(False)
-                                        photoFile = photoOrganizerUtil.get_exif_data(self.path+"/"+file)
+                                        photoFile = photoOrganizerUtil.get_exif_data(self.path+os.sep+file)
                                         if photoFile==None:
                                             photoFile = PhotoFile()
                                         photoFile.dirName = path
@@ -287,7 +286,7 @@ class UpdateAlbum(threading.Thread):
                                         #add to original album
                                         self.album.pics.append(photoFile)
                                         #add to dic
-                                        totalPhotoDictionary[self.path+"/"+file] = photoFile
+                                        totalPhotoDictionary[self.path+os.sep+file] = photoFile
                                         #update imageMap
                                         subImageMap = {}
                                         subImageMap[photoFile.fileName] = photoFile
@@ -301,21 +300,21 @@ class UpdateAlbum(threading.Thread):
 
         #scan album to check if there are pics removed
         for photo in self.album.pics:
-            isFile = os.path.exists(photo.dirName+"/"+photo.fileName)
+            isFile = os.path.exists(photo.dirName+os.sep+photo.fileName)
             if isFile==False:
                 #del from dic
-                key = totalPhotoDictionary.get(self.path+"/"+photo.fileName, None )
+                key = totalPhotoDictionary.get(self.path+os.sep+photo.fileName, None )
                 if key is not None:
-                    del totalPhotoDictionary[self.path+"/"+photo.fileName]
+                    del totalPhotoDictionary[self.path+os.sep+photo.fileName]
                     #del from album pics
                 self.album.pics.pop(listIndex)
                 #update imageMap
                 subImageMap = imageMap[self.path]
                 del subImageMap[photo.fileName]
                 #delete from treeview
-                self.update_tree_store(self.treestore,self.path+"/"+photo.fileName)
+                self.update_tree_store(self.treestore,self.path+os.sep+photo.fileName)
 
-                self.statusBar.push(self.context,"removed:"+self.path+"/"+photo.fileName)
+                self.statusBar.push(self.context,"removed:"+self.path+os.sep+photo.fileName)
                 while Gtk.events_pending():
                     Gtk.main_iteration_do(False)
             listIndex+=1
@@ -327,7 +326,6 @@ class PhotoOrganizerGUI(Gtk.Window):
         #references
         self.imagePathOpened = None
         self.thubnailPanel = {}
-        self.twitterCurrentQuery = None
         self.currenWinImage = None
         self.entry_folder_text = None
         self.hiddenFolders = None
@@ -354,7 +352,6 @@ class PhotoOrganizerGUI(Gtk.Window):
         handlers = {
             "on_PhotoOrganizer_delete_event": self.on_PhotoOrganizer_delete_event,
             "on_PhotoOrganizer_search_event": self.on_PhotoOrganizer_search_event,
-            "on_PhotoOrganizer_twitter_search_event": self.on_PhotoOrganizer_twitter_search_event,
             "on_PhotoOrganizer_mainEdit_clicked":self.on_PhotoOrganizer_mainEdit_clicked,
             "on_PhotoOrganizer_mainOther_clicked":self.on_PhotoOrganizer_mainOther_clicked,
             "on_PhotoOrganizer_mainEffects_clicked":self.on_PhotoOrganizer_mainEffects_clicked,
@@ -381,8 +378,6 @@ class PhotoOrganizerGUI(Gtk.Window):
         #maximize the window 
         self.window.maximize()
         self.window.show_all()
-        #hide some elements
-        self.builder.get_object("box2").set_visible(False)
 
         #load pref at startup, including albums saved
         self.loadPreferences()
@@ -510,8 +505,6 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     #event on filesystem search
     def on_PhotoOrganizer_search_event  (self, *args):
-        #set no twitter search
-        self.twitterSearch = False
         dialog = Gtk.FileChooserDialog("Please choose a folder", self,
                                        Gtk.FileChooserAction.SELECT_FOLDER,
                                        (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
@@ -530,45 +523,6 @@ class PhotoOrganizerGUI(Gtk.Window):
         else:
             dialog.destroy()
 
-    def on_PhotoOrganizer_twitter_search_event(self,widget,event):
-        keyname = Gdk.keyval_name(event.keyval)
-        if keyname == "Return":
-            self.twitterSearch = True
-            self.removeSearchResult(self.builder.get_object("treeviewTwitter"));
-            queryToSend = self.builder.get_object("twitterSearchField").get_text()
-            numberOfTweets = self.builder.get_object("twitterSpin").get_value_as_int()
-            try:
-                self.twitterSearchResult = twitterUtil.searchMediaTweets(queryToSend,numberOfTweets)
-                if(self.twitterSearchResult is not None and len(self.twitterSearchResult.entries)>0):
-                    #create album collection
-                    albumCollection = AlbumCollection()
-                    album = Album()
-                    album.title = queryToSend
-                    for entry in self.twitterSearchResult.entries:
-                        photoFile = PhotoFile()
-                        photoFile.mediaUrl = entry.url;
-                        photoFile.dirName = entry.url
-                        photoFile.fileName = entry.url
-                        photoFile.shortName = entry.url
-                        photoFile.author = entry.author
-                        album.pics.append(photoFile)
-                    albumCollection.albums.append(album)
-                    album.totalPics = len(album.pics)
-                    albumCollection.totalPics = len(album.pics)
-
-                    self.twitterCurrentQuery = queryToSend
-                    treeview = self.builder.get_object("treeviewTwitter")
-                    self.createFixedPhotoTree(albumCollection,None,treeview)
-                    #set current tab
-                    self.builder.get_object("notebook1").set_current_page(1)
-                    leftPanel = self.builder.get_object("leftPanel1")
-                    leftPanel.add(treeview)
-                    leftPanel.show_all()
-                else:
-                    self.on_PhotoOrganizer_search_error_event()
-            except Exception as e:
-                self.on_PhotoOrganizer_generic_error_event(e)
-
     def on_PhotoOrganizer_generic_error_event  (self,e):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,Gtk.ButtonsType.CANCEL,e)
         dialog.run()
@@ -576,12 +530,8 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     def on_PhotoOrganizer_search_error_event  (self, *args):
         extraTextDialog = None
-        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-                                   Gtk.ButtonsType.CANCEL, "No pics founded")
-        if(self.twitterSearch):
-            extraTextDialog = "Specify another twitter search!"
-        else:
-            extraTextDialog = "Specify another folder!"
+        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,Gtk.ButtonsType.CANCEL, "No pics founded")
+        extraTextDialog = "Specify another folder!"
         dialog.format_secondary_text(extraTextDialog)
         dialog.run()
         dialog.destroy()
@@ -598,28 +548,17 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_tree_entry_selected(self, widget, data = None):
         #take the treeview linked to specific tab
         currentPage = self.builder.get_object("notebook1").get_current_page()
-        if currentPage == 0:
-            self.currentTreeview = self.builder.get_object("treeviewAlbum")
-            self.twitterSearch = False
-        else:
-            self.currentTreeview = self.builder.get_object("treeviewTwitter")
-            self.twitterSearch = True
+        self.currentTreeview = self.builder.get_object("treeviewAlbum")
 
         selection = self.currentTreeview.get_selection()
         if selection is not None:
             tree_model, tree_iter = selection.get_selected()
             if (tree_model is not None):
                 imagePath = tree_model.get_value(tree_iter, 0)
-                if(self.twitterSearch):
-                    if(imagePath == self.twitterCurrentQuery):
-                        self.createThubnailPanel(imagePath)
-                    else:
-                        self.createScaledImage(imagePath)
+                if os.path.isfile(imagePath):
+                    self.createScaledImage(imagePath)
                 else:
-                    if os.path.isfile(imagePath):
-                        self.createScaledImage(imagePath)
-                    else:
-                        self.createThubnailPanel(imagePath)
+                    self.createThubnailPanel(imagePath)
 
     def on_PhotoOrganizer_thub_clicked(self, widget,event,imagePath):
         self.createScaledImage(imagePath)
@@ -762,7 +701,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonWebcam.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_webcam_clicked,True))
             buttonGrab = Gtk.Button("Grab")
             buttonGrab.set_size_request(50,20)
-            buttonGrab.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_grabDesktop_clicked,Trueg))
+            buttonGrab.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_grabDesktop_clicked,True))
             buttonOriginalsize = Gtk.Button("Original Size")
             buttonOriginalsize.set_size_request(50,20)
             buttonOriginalsize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_original_size_clicked,False))
@@ -783,7 +722,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonDetail.show()
 
     def on_PhotoOrganizer_mainEffects_clicked(self,widget):
-        if(self.mainEffectsMenuOpened ==False):
+        if self.mainEffectsMenuOpened == False:
             self.mainEffectsMenuOpened = True
             self.mainOtherMenuOpened = False
             self.mainEditMenuOpened = False
@@ -1205,12 +1144,14 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     def on_PhotoOrganizer_undo_clicked(self, widget):
         pixBufStack_size = len(self.pixBufStack)
-        if pixBufStack_size == 1:
+        if pixBufStack_size == 0:
+            return
+        elif pixBufStack_size == 1:
             self.pixBufStack = []
             self.revertFromDrawingArea()
             #replace the first image panel with the first pixbuf
             self.imageOpened.set_from_pixbuf(self.scaled_buf)
-        else:
+        elif pixBufStack_size > 1:
             oldPixBuf = self.pixBufStack[-2]
             del self.pixBufStack[-1]
             self.imageOpened.set_from_pixbuf(oldPixBuf)
@@ -1246,12 +1187,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             dialog.destroy()
             while Gtk.events_pending():
                 Gtk.main_iteration_do(False)
-            if self.twitterSearch:
-                photoOrganizerUtil.savePhotoFromUrl(self.lastTwitterImageUrl,filename)
-            else:
-                #should pass the quality
-                outputExt = filename[filename.index('.')+1:]
-                photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(),outputExt,100,filename);
+            #should pass the quality
+            outputExt = filename[filename.index('.')+1:]
+            photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(),outputExt,100,filename);
         else:
             dialog.destroy()
 
@@ -1404,7 +1342,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             for album in self.lastAlbumCollectionScanned.albums:
                 if album.title == self.currentPhoto.dirName:
                     for pic in album.pics:
-                        if pic.dirName+"/"+ pic.fileName == self.currentPhoto.dirName+"/"+ self.currentPhoto.fileName:
+                        if pic.dirName+os.sep+ pic.fileName == self.currentPhoto.dirName+os.sep+ self.currentPhoto.fileName:
                             pic.people.append(tagPeopleEntry)
                             break
                     break
@@ -1509,22 +1447,22 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.startAppend = True
 
     def nextRightImage(self):
-        currentImageKey = self.imagePathOpened[self.imagePathOpened.rfind("/")+1:]
+        currentImageKey = self.imagePathOpened[self.imagePathOpened.rfind(os.sep)+1:]
         previousKeyFounded = None
         for key, value in self.subImageMap.items():
             if previousKeyFounded is not None:
-                return self.imagePathOpened[:self.imagePathOpened.rfind("/")+1]+key
+                return self.imagePathOpened[:self.imagePathOpened.rfind(os.sep)+1]+key
             if key == currentImageKey:
                 previousKeyFounded = key
 
     def nextLeftImage(self):
-        currentImageKey = self.imagePathOpened[self.imagePathOpened.rfind("/")+1:]
+        currentImageKey = self.imagePathOpened[self.imagePathOpened.rfind(os.sep)+1:]
         previousKeyFounded = None
         for key, value in self.subImageMap.items():
             if key != currentImageKey:
                 previousKeyFounded = key
             if key == currentImageKey and previousKeyFounded is not None:
-                return self.imagePathOpened[:self.imagePathOpened.rfind("/")+1]+previousKeyFounded
+                return self.imagePathOpened[:self.imagePathOpened.rfind(os.sep)+1]+previousKeyFounded
 
     '''
         END SECTION FOR EVENTS
@@ -1532,16 +1470,6 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     def createScaledImage(self,imagePath):
         pimage = Gtk.Image()
-
-        if(self.twitterSearch):
-            self.lastTwitterImageUrl = imagePath
-            imagePath = imagePath[imagePath.index('http'):]
-            response=urllib2.urlopen(imagePath)
-            loader=GdkPixbuf.PixbufLoader()
-            loader.write(response.read())
-            loader.close()
-            pixbuf = loader.get_pixbuf()
-
         if os.path.isfile(imagePath):
             pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
 
@@ -1550,16 +1478,6 @@ class PhotoOrganizerGUI(Gtk.Window):
         pimage.set_from_pixbuf(self.scaled_buf)
         self.imagePathOpened = imagePath
         self.createImagePanel(pimage)
-
-        if self.twitterSearch:
-            mediaUrl = self.imagePathOpened
-            for entry in self.twitterSearchResult.entries:
-                try:
-                    if(entry.url.index(mediaUrl)!=-1):
-                        self.imageOpened.set_tooltip_text("user:"+entry.author+"\ndate:"+entry.creationDate+"\ntext:"+entry.text)
-                        self.imageOpened.show_all()
-                except:
-                    pass
 
     def createImagePanel(self,pimage):
         imagePanel = self.builder.get_object("imagePanel")
@@ -1611,17 +1529,8 @@ class PhotoOrganizerGUI(Gtk.Window):
                     eventBox = Gtk.EventBox()
                     eventBox.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
                     pixbuf = None
-                    if(self.twitterSearch):
-                        value.fileName = value.fileName[value.fileName.index('http'):]
-                        response=urllib2.urlopen(value.fileName)
-                        loader=GdkPixbuf.PixbufLoader()
-                        loader.write(response.read())
-                        loader.close()
-                        eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,value.fileName)
-                        pixbuf = loader.get_pixbuf()
-                    else:
-                        eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,imagePath+"/"+value.fileName)
-                        pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath+"/"+value.fileName)
+                    eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,imagePath+os.sep+value.fileName)
+                    pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath+os.sep+value.fileName)
                     scaled_buf = pixbuf.scale_simple(60,60,GdkPixbuf.InterpType.BILINEAR)
                     pimage.set_from_pixbuf(scaled_buf)
                     eventBox.add(pimage)
@@ -1709,7 +1618,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             subImageMap = {}
             for photo in album.pics:
                 subImageMap[photo.fileName] = photo
-                treestore.append(piter, ['%s' %album.title+"/"+photo.fileName])
+                treestore.append(piter, ['%s' %album.title+os.sep+photo.fileName])
             imageMap[album.title] = subImageMap
 
         piter = treestore.append(None, [""])
@@ -1719,7 +1628,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             for key in peopleTag:
                 piter2 = treestore.append(piter, ['%s' % key])
                 for pic in peopleTag[key].pics:
-                    treestore.append(piter2, ['%s' %pic.dirName+"/"+pic.fileName])
+                    treestore.append(piter2, ['%s' %pic.dirName+os.sep+pic.fileName])
 
         treeview.set_model(treestore)
         albumNameCell = Gtk.CellRendererText()
@@ -1757,7 +1666,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                 savedAlbums = self.photoOrganizerPref.albumCollection
                 for album in savedAlbums.albums:
                     for photo in album.pics:
-                        totalPhotoDictionary[album.title+"/"+photo.fileName] = photo
+                        totalPhotoDictionary[album.title+os.sep+photo.fileName] = photo
 
 
                 #set current tab
@@ -1765,7 +1674,6 @@ class PhotoOrganizerGUI(Gtk.Window):
                 leftPanel = self.builder.get_object("leftPanel")
                 leftPanel.add_with_viewport(treeview)
                 leftPanel.show_all()
-                self.twitterSearch = False
 
                 statusBar = self.builder.get_object("statusbar1")
                 context = statusBar.get_context_id("example")
