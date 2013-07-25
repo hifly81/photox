@@ -1,0 +1,90 @@
+# English translations for PACKAGE package.
+# Copyright (C) 2013 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Hifly <hifly@hifly>, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-07-16 19:20+0200\n"
+"PO-Revision-Date: 2013-07-16 19:20+0200\n"
+"Last-Translator: Hifly <hifly@hifly>\n"
+"Language-Team: English <en@translate.freefriends.org>\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: editWindow.py:23 photoOrganizerGUIGlade.py:629
+msgid "RotateL"
+msgstr "Rotate Left"
+
+#: editWindow.py:25 photoOrganizerGUIGlade.py:632
+msgid "RotateR"
+msgstr "Rotate Right"
+
+#: glade/photoOrganizerGui.glade.h:1
+msgid "PhotoOrganizer"
+msgstr "PhotoOrganizer"
+
+#: glade/photoOrganizerGui.glade.h:2
+msgid "_File"
+msgstr "_File"
+
+#: glade/photoOrganizerGui.glade.h:3
+msgid "Search"
+msgstr "Search"
+
+#: glade/photoOrganizerGui.glade.h:4
+msgid "_Edit"
+msgstr "_Edit"
+
+#: glade/photoOrganizerGui.glade.h:5
+msgid "_Help"
+msgstr "_Help"
+
+#: glade/photoOrganizerGui.glade.h:6
+msgid "album"
+msgstr "album"
+
+#: glade/photoOrganizerGui.glade.h:7
+msgid "Undo"
+msgstr "Undo"
+
+#: glade/photoOrganizerGui.glade.h:8
+msgid "Save"
+msgstr "Save"
+
+#: glade/photoOrganizerGui.glade.h:9
+msgid "Effects"
+msgstr "Effects"
+
+#: glade/photoOrganizerGui.glade.h:10
+msgid "Edit"
+msgstr "Edit"
+
+#: glade/photoOrganizerGui.glade.h:11
+msgid "Transform"
+msgstr "Transform"
+
+#: glade/photoOrganizerGui.glade.h:12
+msgid "Stylish"
+msgstr "Stylish"
+
+#: glade/photoOrganizerGui.glade.h:13
+msgid "Filter"
+msgstr "Filter"
+
+#: glade/photoOrganizerGui.glade.h:14
+msgid "Color"
+msgstr "Color"
+
+#: glade/photoOrganizerGui.glade.h:15
+msgid "Light"
+msgstr "Light"
+
+#: glade/photoOrganizerGui.glade.h:16
+msgid "Other"
+msgstr "Other"

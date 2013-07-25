@@ -20,9 +20,9 @@ class EditWindow (TransparentWindow):
         #main box
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=6)
         boxBottom = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=6)
-        buttonRotateLeft = Gtk.Button("Rotate Left")
+        buttonRotateLeft = Gtk.Button(_("RotateL"))
         buttonRotateLeft.set_size_request(50,20)
-        buttonRotateRight = Gtk.Button("Rotate Right")
+        buttonRotateRight = Gtk.Button(_("RotateR"))
         buttonRotateRight.set_size_request(50,20)
         buttonMirror = Gtk.Button("Mirror")
         buttonMirror.set_size_request(50,20)
