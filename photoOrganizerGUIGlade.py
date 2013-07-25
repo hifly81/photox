@@ -10,7 +10,6 @@ Created on Mar 01, 2013
 import os
 import math
 import time
-import urllib2
 import logging.config
 import photoOrganizerStorage
 import photoOrganizerUtil
@@ -19,6 +18,7 @@ import StringIO
 import Image
 import imghdr
 import threading
+import constantsAccessor as K
 from datetime import datetime
 from transparentWindow import TransparentWindow
 from detailWindow import DetailWindow
@@ -27,20 +27,19 @@ from loadingWindow import LoadingWindow
 from cairo import ImageSurface
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject,GLib
 from photoOrganizerStorage import PhotoOrganizerPref
-from photoOrganizerUtil import AlbumCollection
 from photoOrganizerUtil import Album
 from photoOrganizerUtil import PhotoFile
 from photoOrganizerUtil import PeopleTag
 
 #logging conf
-logging.config.fileConfig('config/logging.conf')
-logger = logging.getLogger('photoOrganizer')
+logging.config.fileConfig(K.LoggerConstants.DEFAULT_LOGGING_CONF)
+logger = logging.getLogger(K.LoggerConstants.DEFAULT_LOGGER_NAME)
 
 #Initializing the gtk's thread engine
 GObject.threads_init()
 
 #const
-GLADE_CONF = "glade/photoOrganizerGui.glade"
+GLADE_CONF = K.GladeConstants.MAIN_GUI_FILE
 
 #global vars
 global totalPhotoDictionary
@@ -367,12 +366,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         #handler of GUI signals
         self.builder.connect_signals(handlers)
 
-        #change textview color
-        parse, color = Gdk.Color.parse('#F0F0F0')
-
         #show main window
-        self.window = self.builder.get_object("PhotoOrganizer")
-        self.window.connect("key_press_event",self.on_PhotoOrganizer_image_keypress_event)
+        self.window = self.builder.get_object(K.GladeConstants.ROOT_OBJECT)
+        self.window.connect(K.GUIEventsConstants.KEY_PRESS, self.on_PhotoOrganizer_image_keypress_event)
         #center the window
         self.window.set_position(Gtk.WindowPosition.CENTER)
         #maximize the window 
@@ -496,26 +492,26 @@ class PhotoOrganizerGUI(Gtk.Window):
     '''
 
     #event on quit app
-    def on_PhotoOrganizer_delete_event  (self, *args):
-        if(self.lastAlbumCollectionScanned is not None):
+    def on_PhotoOrganizer_delete_event(self, *args):
+        if self.lastAlbumCollectionScanned is not None:
             #save the preferences
             photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text,self.lastAlbumCollectionScanned,self.peopleTag)
             photoOrganizerStorage.savePref(photoFile)
         Gtk.main_quit()
 
     #event on filesystem search
-    def on_PhotoOrganizer_search_event  (self, *args):
-        dialog = Gtk.FileChooserDialog("Please choose a folder", self,
+    def on_PhotoOrganizer_search_event(self, *args):
+        dialog = Gtk.FileChooserDialog(K.GUIMessageConstants.FOLDER_CHOOSE, self,
                                        Gtk.FileChooserAction.SELECT_FOLDER,
                                        (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                        "Select", Gtk.ResponseType.OK))
-        dialog.set_default_size(800, 400)
+                                        K.GUIMessageConstants.FILE_DIR_CHOOSE, Gtk.ResponseType.OK))
+        dialog.set_default_size(K.SizeConstants.DIALOG_DEFAULT_SIZE[0], K.SizeConstants.DIALOG_DEFAULT_SIZE[1])
 
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
             #get directory selected
             self.searchEntry = dialog.get_filename()
-            self.removeSearchResult(self.builder.get_object("treeviewAlbum"));
+            self.removeSearchResult(self.builder.get_object(K.GladeConstants.TREEVIEW_ALBUM));
 
             # You'll need to import gobject
             GObject.timeout_add(100, self.callScanPhoto)
@@ -530,8 +526,8 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     def on_PhotoOrganizer_search_error_event  (self, *args):
         extraTextDialog = None
-        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,Gtk.ButtonsType.CANCEL, "No pics founded")
-        extraTextDialog = "Specify another folder!"
+        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,Gtk.ButtonsType.CANCEL,K.GUIMessageConstants.ERROR_NO_PICS)
+        extraTextDialog = K.GUIMessageConstants.ERROR_NEW_FOLDER
         dialog.format_secondary_text(extraTextDialog)
         dialog.run()
         dialog.destroy()
@@ -932,8 +928,8 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonBrightness.show()
             buttonLight.show()
 
-    def on_PhotoOrganizer_notebook_switch(self,obj1,obj2,i):
-        if self.builder.get_object("notebook1").get_current_page() == 0:
+    def on_PhotoOrganizer_notebook_switch(self, obj1, obj2, i):
+        if self.builder.get_object(K.GladeConstants.NOTEBOOK).get_current_page() == 0:
             self.builder.get_object("box2").set_visible(True)
         else:
             self.builder.get_object("box2").set_visible(False)
@@ -946,7 +942,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.createImagePanel(newImage)
             self.imageOpened = newImage
 
-    def on_apply_effects(self,widget,inner_function,put_in_stack):
+    def on_apply_effects(self, widget, inner_function, put_in_stack):
         self.revertFromDrawingArea()
         func_name = inner_function.__name__
         methodToCall = getattr(self, func_name)
@@ -1126,7 +1122,7 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     def on_PhotoOrganizer_gaussian_clicked(self, widget):
         pixbuf = self.imageOpened.get_pixbuf()
-        new_buf = photoEffects.apply_gaussian_blur(pixbuf,10)
+        new_buf = photoEffects.apply_gaussian_blur(pixbuf, 10)
         return new_buf
 
     def on_PhotoOrganizer_colorize_clicked(self, widget):
@@ -1139,9 +1135,9 @@ class PhotoOrganizerGUI(Gtk.Window):
         new_buf = photoEffects.apply_frame(pixbuf)
         return new_buf
 
-    def on_PhotoOrganizer_grabDesktop_clicked(self,widget):
+    def on_PhotoOrganizer_grabDesktop_clicked(self, widget):
         #need to be sure a imagePanel is already created
-        if len(self.builder.get_object("imagePanel").get_children())==0:
+        if len(self.builder.get_object(K.GladeConstants.IMAGE_PANEL).get_children()) == 0:
             self.createImagePanel(None)
         new_buf = photoEffects.captureDesktopImage()
         return new_buf
@@ -1169,7 +1165,7 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     def on_PhotoOrganizer_webcam_clicked(self,widget):
         #need to be sure a imagePanel is already created
-        if len(self.builder.get_object("imagePanel").get_children())==0:
+        if len(self.builder.get_object(K.GladeConstants.IMAGE_PANEL).get_children()) == 0:
             self.createImagePanel(None)
         new_buf = photoEffects.captureWebcamImage()
         return new_buf
@@ -1221,18 +1217,18 @@ class PhotoOrganizerGUI(Gtk.Window):
                 Gtk.main_iteration_do(False)
             #should pass the quality
             outputExt = filename[filename.index('.')+1:]
-            photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(),outputExt,100,filename);
+            photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(), outputExt, 100, filename)
         else:
             dialog.destroy()
 
-    def on_PhotoOrganizer_image_keypress_event(self,widget,event) :
+    def on_PhotoOrganizer_image_keypress_event(self, widget, event):
         newImagePath = None
         keyName = Gdk.keyval_name(event.keyval)
-        if keyName == "Right":
+        if keyName == K.GUIEventsConstants.RIGHT:
             newImagePath = self.nextRightImage()
         if newImagePath is not None:
             self.createScaledImage(newImagePath)
-        elif keyName == "Left":
+        elif keyName == K.GUIEventsConstants.LEFT:
             newImagePath = self.nextLeftImage()
             if newImagePath is not None:
                 self.createScaledImage(newImagePath)
@@ -1247,12 +1243,12 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.winImage_vbox.pack_start(eventBox, True, True, 0)
         self.winImage.add(self.winImage_vbox)
         (x, y) = self.get_position()
-        y1 = y+50
+        y1 = y + 50
         self.winImage.move(x, y1)
         self.winImage.show_all()
 
     def on_PhotoOrganizer_tagPeople_clicked(self,widget):
-        imagePanel = self.builder.get_object("imagePanel")
+        imagePanel = self.builder.get_object(K.GladeConstants.IMAGE_PANEL)
         try:
             imagePanel.remove(imagePanel.get_children()[0])
         except:
@@ -1261,16 +1257,16 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.darea = Gtk.DrawingArea()
         pixbuf = self.imageOpened.get_pixbuf()
         width,height = pixbuf.get_width(),pixbuf.get_height()
-        self.imageForDrawing = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+        self.imageForDrawing = Image.fromstring(K.ImageConstants.RGB_SHORT_NAME, (width, height), pixbuf.get_pixels())
         self.imageForDrawingStart = True
         self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.darea.connect("draw", self.on_drawing_area_tagPeople_draw)
-        self.darea.connect("button-press-event", self.on_drawing_area_tagPeople_button_press)
+        self.darea.connect(K.GUIEventsConstants.DRAWING_AREA_DRAW, self.on_drawing_area_tagPeople_draw)
+        self.darea.connect(K.GUIEventsConstants.BUTTON_PRESS, self.on_drawing_area_tagPeople_button_press)
         #set the cursor for tagging
         cross_cursor = Gdk.Cursor(Gdk.CursorType.CROSSHAIR)
         imagePanel.get_window().set_cursor(cross_cursor)
-        self.darea.set_size_request(pixbuf.get_width(),pixbuf.get_height())
-        #this add to the image panel a drwaing area
+        self.darea.set_size_request(pixbuf.get_width(), pixbuf.get_height())
+        #this add to the image panel a drawing area
         imagePanel.add_with_viewport(self.darea)
         self.drawingAreaOpened = True
         #before showing need to get faces coordinates
@@ -1289,7 +1285,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.buffer = StringIO.StringIO()
             self.image = self.imageForDrawing
             self.imageForDrawingStart = False
-            self.image.save(self.buffer, format="PNG")
+            self.image.save(self.buffer, format=K.ImageConstants.PNG_EXT)
 
         self.buffer.seek(0)
         cr.save()
@@ -1299,7 +1295,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         cr.paint()
         cr.restore()
 
-        #draw rectabgle with faces
+        #draw rectangle with faces
         if self.faces is not None and len(self.faces)>0:
             for face in self.faces:
                 xx = face[0][0]
@@ -1307,14 +1303,14 @@ class PhotoOrganizerGUI(Gtk.Window):
                 width = face[0][2]
                 height = face[0][3]
 
-                cr.move_to(xx,yy)
-                cr.line_to(xx+width,yy)
-                cr.move_to(xx,yy)
-                cr.line_to(xx,yy+height)
-                cr.move_to(xx,yy+height)
-                cr.line_to(xx+width,yy+height)
-                cr.move_to(xx+width,yy+height)
-                cr.line_to(xx+width,yy)
+                cr.move_to(xx, yy)
+                cr.line_to(xx + width, yy)
+                cr.move_to(xx, yy)
+                cr.line_to(xx, yy + height)
+                cr.move_to(xx, yy + height)
+                cr.line_to(xx + width, yy + height)
+                cr.move_to(xx + width, yy + height)
+                cr.line_to(xx + width, yy)
 
                 cr.stroke()
 
@@ -1327,15 +1323,15 @@ class PhotoOrganizerGUI(Gtk.Window):
             if self.peopleTag:
                 for key in self.peopleTag.keys():
                     self.tagPeopleEntry.add_words([key])
-            self.tagPeopleEntry.connect("key-press-event", self.on_drawing_area_tagPeople_entry_keypress)
-            box.add(self.tagPeopleEntry )
+            self.tagPeopleEntry.connect(K.GUIEventsConstants.KEY_PRESS, self.on_drawing_area_tagPeople_entry_keypress)
+            box.add(self.tagPeopleEntry)
             self.twin.add(box)
             self.twin.show_all()
 
 
-    def on_drawing_area_tagPeople_entry_keypress(self,widget,event):
+    def on_drawing_area_tagPeople_entry_keypress(self, widget, event):
         keyname = Gdk.keyval_name(event.keyval)
-        if keyname == "Return":
+        if keyname == K.GUIEventsConstants.RETURN:
             tagPeopleEntry = self.tagPeopleEntry.get_text()
             #set tooltip
             self.imageOpened.set_tooltip_text(tagPeopleEntry)
@@ -1370,7 +1366,7 @@ class PhotoOrganizerGUI(Gtk.Window):
 
             #need to add the tag to the current photo
             self.currentPhoto.people.append(tagPeopleEntry)
-            #need to update alcum collection
+            #need to update album collection
             for album in self.lastAlbumCollectionScanned.albums:
                 if album.title == self.currentPhoto.dirName:
                     for pic in album.pics:
@@ -1379,8 +1375,8 @@ class PhotoOrganizerGUI(Gtk.Window):
                             break
                     break
 
-    def on_PhotoOrganizer_crop_clicked(self,widget):
-        imagePanel = self.builder.get_object("imagePanel")
+    def on_PhotoOrganizer_crop_clicked(self, widget):
+        imagePanel = self.builder.get_object(K.GladeConstants.IMAGE_PANEL)
         try:
             imagePanel.remove(imagePanel.get_children()[0])
         except:
@@ -1390,16 +1386,16 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.coords = []
         self.darea = Gtk.DrawingArea()
         pixbuf = self.imageOpened.get_pixbuf()
-        width,height = pixbuf.get_width(),pixbuf.get_height()
-        self.imageForDrawing = Image.fromstring("RGB",(width,height),pixbuf.get_pixels() )
+        width,height = pixbuf.get_width(), pixbuf.get_height()
+        self.imageForDrawing = Image.fromstring(K.ImageConstants.RGB_SHORT_NAME, (width, height), pixbuf.get_pixels())
         self.imageForDrawingStart = True
         self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.POINTER_MOTION_MASK)
-        self.darea.connect("draw", self.on_drawing_area_crop_draw)
-        self.darea.connect("button-press-event", self.on_drawing_area_crop_button_press)
-        self.darea.connect("button-release-event", self.on_drawing_area_crop_button_release)
-        self.darea.connect("motion_notify_event", self.on_drawing_area_crop_button_move)
-        self.darea.set_size_request(pixbuf.get_width(),pixbuf.get_height())
-        #this add to the image panel a drwaing area
+        self.darea.connect(K.GUIEventsConstants.DRAWING_AREA_DRAW, self.on_drawing_area_crop_draw)
+        self.darea.connect(K.GUIEventsConstants.BUTTON_PRESS, self.on_drawing_area_crop_button_press)
+        self.darea.connect(K.GUIEventsConstants.BUTTON_RELEASE, self.on_drawing_area_crop_button_release)
+        self.darea.connect(K.GUIEventsConstants.MOUSE_MOTION, self.on_drawing_area_crop_button_move)
+        self.darea.set_size_request(pixbuf.get_width(), pixbuf.get_height())
+        #this add to the image panel a drawing area
         imagePanel.add_with_viewport(self.darea)
         self.drawingAreaOpened = True
         imagePanel.show_all()
@@ -1410,7 +1406,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.buffer = StringIO.StringIO()
             self.image = self.imageForDrawing
             self.imageForDrawingStart = False
-            self.image.save(self.buffer, format="PNG")
+            self.image.save(self.buffer, format=K.ImageConstants.PNG_EXT)
 
         self.buffer.seek(0)
         cr.save()
@@ -1439,7 +1435,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                 self.box = (int(firstCoord[0]),int(firstCoord[1]),int(secondCoord[0]),int(secondCoord[1]))
 
 
-        if (self.deleteCoords == True):
+        if self.deleteCoords == True:
             if(int(self.box[0])>int(self.box[2])):
                 self.box = (self.box[2],self.box[1],self.box[0],self.box[3])
             if(int(self.box[1])>int(self.box[3])):
@@ -1452,7 +1448,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             cr.fill()
 
             self.buffer = StringIO.StringIO()
-            self.image.save(self.buffer, format="PNG")
+            self.image.save(self.buffer, format=K.ImageConstants.PNG_EXT)
             self.buffer.seek(0)
             cr.save()
             iss = ImageSurface.create_from_png(self.buffer)
@@ -1512,13 +1508,13 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.createImagePanel(pimage)
 
     def createImagePanel(self,pimage):
-        imagePanel = self.builder.get_object("imagePanel")
+        imagePanel = self.builder.get_object(K.GladeConstants.IMAGE_PANEL)
         try:
             imagePanel.remove(imagePanel.get_children()[0])
         except:
             pass
         eventBox = Gtk.EventBox()
-        eventBox.connect("button_press_event",self.on_PhotoOrganizer_image_contextmenu_event)
+        eventBox.connect(K.GUIEventsConstants.BUTTON_PRESS,self.on_PhotoOrganizer_image_contextmenu_event)
         if(pimage is not None):
             eventBox.add(pimage)
             #reference to image selected
@@ -1531,13 +1527,13 @@ class PhotoOrganizerGUI(Gtk.Window):
         imagePanel.show_all()
 
     def createThubnailPanel(self,imagePath):
-        imagePanel = self.builder.get_object("imagePanel")
+        imagePanel = self.builder.get_object(K.GladeConstants.IMAGE_PANEL)
         try:
             imagePanel.remove(imagePanel.get_children()[0])
         except:
             #nothing to do
             pass
-        if(imagePath in self.thubnailPanel):
+        if imagePath in self.thubnailPanel:
             imagePanel.add(self.thubnailPanel[imagePath])
             imagePanel.show_all()
             while Gtk.events_pending():
@@ -1561,7 +1557,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     eventBox = Gtk.EventBox()
                     eventBox.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
                     pixbuf = None
-                    eventBox.connect("button_press_event", self.on_PhotoOrganizer_thub_clicked,imagePath+os.sep+value.fileName)
+                    eventBox.connect(K.GUIEventsConstants.BUTTON_PRESS, self.on_PhotoOrganizer_thub_clicked,imagePath+os.sep+value.fileName)
                     pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath+os.sep+value.fileName)
                     scaled_buf = pixbuf.scale_simple(60,60,GdkPixbuf.InterpType.BILINEAR)
                     pimage.set_from_pixbuf(scaled_buf)
@@ -1588,15 +1584,15 @@ class PhotoOrganizerGUI(Gtk.Window):
             Gtk.main_iteration_do(False)
 
         #get status_bar
-        statusBar = self.builder.get_object("statusbar1")
+        statusBar = self.builder.get_object(K.GladeConstants.STATUSBAR)
         context = statusBar.get_context_id("example")
         # create the treestore; the model has one column of type string
         treestore = Gtk.TreeStore(str)
         treestore.set_sort_column_id(0,Gtk.SortType.DESCENDING)
-        treeview = self.builder.get_object("treeviewAlbum")
-        leftPanel = self.builder.get_object("leftPanel")
+        treeview = self.builder.get_object(K.GladeConstants.TREEVIEW_ALBUM)
+        leftPanel = self.builder.get_object(K.GladeConstants.LEFTPANEL)
         #set current tab
-        self.builder.get_object("notebook1").set_current_page(0)
+        self.builder.get_object(K.GladeConstants.NOTEBOOK).set_current_page(0)
 
         #need to reset
         global imageMap
@@ -1614,7 +1610,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                 self.photoOrganizerPref.peopleTag = None
             imageMap = imageDictionary
             self.currentTreeview = treeview
-            treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
+            treeview.connect(K.GUIEventsConstants.CURSOR_CHANGED, self.on_PhotoOrganizer_tree_entry_selected)
             loadWindow.close_window()
             leftPanel.show_all()
         else:
@@ -1690,7 +1686,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                 #load album saved
                 self.hiddenFolders = self.photoOrganizerPref.hiddenFolders
                 self.entry_folder_text = self.photoOrganizerPref.lastSearch
-                treeview = self.builder.get_object("treeviewAlbum")
+                treeview = self.builder.get_object(K.GladeConstants.TREEVIEW_ALBUM)
                 self.createFixedPhotoTree(self.photoOrganizerPref.albumCollection,self.photoOrganizerPref.peopleTag,treeview)
                 #rebuild photo indexes
                 self.lastAlbumCollectionScanned = self.photoOrganizerPref.albumCollection
@@ -1702,12 +1698,12 @@ class PhotoOrganizerGUI(Gtk.Window):
 
 
                 #set current tab
-                self.builder.get_object("notebook1").set_current_page(0)
-                leftPanel = self.builder.get_object("leftPanel")
+                self.builder.get_object(K.GladeConstants.NOTEBOOK).set_current_page(0)
+                leftPanel = self.builder.get_object(K.GladeConstants.LEFTPANEL)
                 leftPanel.add_with_viewport(treeview)
                 leftPanel.show_all()
 
-                statusBar = self.builder.get_object("statusbar1")
+                statusBar = self.builder.get_object(K.GladeConstants.STATUSBAR)
                 context = statusBar.get_context_id("example")
                 threads = []
                 #start threads to search for new photos
