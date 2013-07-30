@@ -8,77 +8,81 @@ Created on Mar 21, 2013
 
 import os
 import time
-import urllib
 import imghdr
 import logging
 import logging.config
+import geoUtil
 from datetime import datetime
 from time import strptime
 from gi.repository import Gtk
 from PIL import Image
-from PIL.ExifTags import TAGS,GPSTAGS
+from PIL.ExifTags import TAGS
+from constant import constantsAccessor as K
 
-logging.config.fileConfig('config/logging.conf')
-logger = logging.getLogger('photoOrganizer')
+logging.config.fileConfig(K.LoggerConstants.DEFAULT_LOGGING_CONF)
+logger = logging.getLogger(K.LoggerConstants.DEFAULT_LOGGER_NAME)
 
 class PeopleTag:
-  def __init__(self):
-    self.totalPics = None
-    self.name = None
-    self.surname = None
-    self.pics = []
-    
+    def __init__(self):
+        self.totalPics = None
+        self.name = None
+        self.surname = None
+        self.pics = []
+
+
 class PhotoFile:
-  def __init__(self):
-    self.dirName = None  
-    self.fileName = None
-    self.mediaUrl = None
-    self.shortName = None
-    self.date = None
-    self.description = None
-    self.brand = None
-    self.model = None
-    self.width = None
-    self.height = None
-    self.author = None
-    self.latitude = None
-    self.longitude = None
-    self.copyright = None
-    #reference to people
-    self.people = []
+    def __init__(self):
+        self.dirName = None
+        self.fileName = None
+        self.mediaUrl = None
+        self.shortName = None
+        self.date = None
+        self.description = None
+        self.brand = None
+        self.model = None
+        self.width = None
+        self.height = None
+        self.author = None
+        self.latitude = None
+        self.longitude = None
+        self.copyright = None
+        #reference to people
+        self.people = []
+
 
 class Album:
-  def __init__(self):
-    self.year = None
-    self.month = None
-    self.totalPics = None
-    # path of the album
-    self.title = None
-    self.pics = []
+    def __init__(self):
+        self.year = None
+        self.month = None
+        self.totalPics = None
+        # path of the album
+        self.title = None
+        self.pics = []
   
-  def __lt__(self, other):
-      monthSelf =  strptime(self.month,'%B').tm_mon
-      monthOther =  strptime(other.month,'%B').tm_mon
-      if self.year == other.year:
-          return monthSelf > monthOther
-      else:
-          return self.year > other.year
+    def __lt__(self, other):
+        monthSelf = strptime(self.month, K.DateTimeConstants.MONTH_SHORTCUT).tm_mon
+        monthOther = strptime(other.month, K.DateTimeConstants.MONTH_SHORTCUT).tm_mon
+        if self.year == other.year:
+            return monthSelf > monthOther
+        else:
+            return self.year > other.year
+
 
 class AlbumCollection:    
-  def __init__(self):
-    self.totalAlbums = None
-    self.totalPics = None
-    self.title = None
-    self.albums = []
-    self.peopleTags = []
+    def __init__(self):
+        self.totalAlbums = None
+        self.totalPics = None
+        self.title = None
+        self.albums = []
+        self.peopleTags = []
   
-  #prints class info  
-  def __str__(self):
-        return "%s %s %s %s %s %s %s %s"%(self.fileName,self.shortName,self.date,self.description,self.brand,self.model,self.width,self.height)
+    #prints class info
+    def __str__(self):
+        return "%s %s %s %s %s %s %s %s"%(self.fileName, self.shortName, self.date, self.description, self.brand, self.model, self.width, self.height)
   
 
 #scan dirs and searches for img
-def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,leftPanel):
+def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, imageMap, leftPanel):
     photoDictionary = {}
     yearDictionary = {}
     monthDictionary = {}
@@ -98,23 +102,23 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
             album.title = path
             for file in files:
                 #extract creation date
-                fileCreationDate = time.ctime(os.path.getctime(path+"/"+file))
-                fileDateTime = datetime.strptime(fileCreationDate, "%a %b %d %H:%M:%S %Y")
+                fileCreationDate = time.ctime(os.path.getctime(path + os.sep + file))
+                fileDateTime = datetime.strptime(fileCreationDate, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
                 fileDateTimeYear = fileDateTime.year
                 fileDateTimeMonthAsNumber = fileDateTime.month
-                fileDateTimeMonth = fileDateTime.strftime("%B")
+                fileDateTimeMonth = fileDateTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
                 if minYearFound is None:
                     minYearFound = fileDateTimeYear
                 if minMonthFound is None:
-                   minMonthFound =  fileDateTimeMonth  
+                   minMonthFound = fileDateTimeMonth
                    minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                 if fileDateTimeYear < minYearFound:
                     minYearFound = fileDateTimeYear
-                    minMonthFound =  fileDateTimeMonth
+                    minMonthFound = fileDateTimeMonth
                     minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                 else:
                     if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
-                        minMonthFound =  fileDateTimeMonth
+                        minMonthFound = fileDateTimeMonth
                         minMonthFoundAsNumber = fileDateTimeMonthAsNumber 
   
                 filename = os.path.join(path, file)
@@ -131,19 +135,19 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                             photoFileDateAsTime = datetime.strptime(photoFile.date, "%Y:%m:%d %H:%M:%S")
                             fileDateTimeYear = photoFileDateAsTime.year
                             fileDateTimeMonthAsNumber = photoFileDateAsTime.month
-                            fileDateTimeMonth = photoFileDateAsTime.strftime("%B")
+                            fileDateTimeMonth = photoFileDateAsTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
                         if minYearFound is None:
                             minYearFound = fileDateTimeYear
                         if minMonthFound is None:
-                            minMonthFound =  fileDateTimeMonth  
+                            minMonthFound = fileDateTimeMonth
                             minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                         if fileDateTimeYear < minYearFound:
                             minYearFound = fileDateTimeYear
-                            minMonthFound =  fileDateTimeMonth
+                            minMonthFound = fileDateTimeMonth
                             minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                         else:
                             if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
-                                minMonthFound =  fileDateTimeMonth
+                                minMonthFound = fileDateTimeMonth
                                 minMonthFoundAsNumber = fileDateTimeMonthAsNumber 
                     
 
@@ -180,8 +184,8 @@ def walkDir(dirPath,hiddenFolders,statusBar,context,treestore,treeview,imageMap,
                 subImageMap = {}
                 for photo in album.pics:
                     subImageMap[photo.fileName] = photo
-                    photoDictionary[album.title+"/"+photo.fileName] = photo
-                    treestore.append(piter, ['%s' %album.title+"/"+photo.fileName])
+                    photoDictionary[album.title + os.sep + photo.fileName] = photo
+                    treestore.append(piter, ['%s' %album.title + os.sep + photo.fileName])
                 imageMap[album.title] = subImageMap    
                 treeview.set_model(treestore)
                 
@@ -214,7 +218,7 @@ def get_exif_data(fname):
                 for tag, value in exifinfo.items():
                     decoded = TAGS.get(tag, tag)
                     if decoded == "GPSInfo":
-                        lat,longit = extractCoordinates(value)  
+                        lat,longit = geoUtil.extractCoordinates(value)
                     else:
                         ret[decoded] = value
                     
@@ -243,44 +247,4 @@ def get_exif_data(fname):
                 
     except IOError:
         logger.error("IOERROR %s",fname)
-    return photoFile  
-
-def extractCoordinates(exifValue):
-    #geocoding
-    gpsData = {}
-    for gpsTag in exifValue:
-        tagElem = GPSTAGS.get(gpsTag, gpsTag)
-        gpsData[tagElem] = exifValue[gpsTag]
-    
-    if "GPSLatitude" in gpsData:
-        lat =  gpsData["GPSLatitude"]
-        lat = decimalCoordinatesToDegress(lat)
-    if "GPSLongitude" in gpsData:
-        longit =  gpsData["GPSLongitude"]
-        longit = decimalCoordinatesToDegress(longit)
-    if "GPSLatitudeRef" in gpsData:
-        latRef =  gpsData["GPSLatitudeRef"]
-    if "GPSLongitudeRef" in gpsData:
-        longitRef =  gpsData["GPSLongitudeRef"]
-        
-    if latRef != "N":                     
-        lat = 0 - lat
-    if longitRef != "E":
-        longit = 0 - longit
-        
-    return lat,longit
-
-def decimalCoordinatesToDegress(coord):
-    dec = float(coord[0][0])/float(coord[0][1])
-    minut = float(coord[1][0])/float(coord[1][1])
-    sec = float(coord[2][0])/float(coord[2][1])
-    return dec+(minut/60.0)+(sec/3600.0)
-    
-def savePhotoFromUrl(url,filename):
-    f = open( filename, 'wb' )
-    data = urllib.urlopen(url).read()
-    f.write( data )
-    f.close()
-
-def savePhotoFromPixbuf(pixbuf,type,quality,filename):
-    pixbuf.savev(filename, type, [],[])
+    return photoFile

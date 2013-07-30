@@ -6,6 +6,7 @@ Created on Apr 9, 2013
 
 import cairo
 from gi.repository import Gtk, Gdk
+from constant import constantsAccessor as K
 
 
 class TransparentWindow (Gtk.Window):
@@ -20,7 +21,7 @@ class TransparentWindow (Gtk.Window):
             self.set_visual(self.visual)
 
         self.set_app_paintable(True)
-        self.connect("draw", self.area_draw)
+        self.connect(K.GUIEventsConstants.DRAWING_AREA_DRAW, self.area_draw)
 
     def area_draw(self, widget, cr):
         cr.set_source_rgba(.2, .2, .2, 0.9)

@@ -11,27 +11,26 @@ import os
 import math
 import time
 import logging.config
-import photoOrganizerStorage
-import photoOrganizerUtil
-import photoEffects
 import StringIO
-import Image
 import imghdr
 import threading
-import constantsAccessor as K
+import Image
+import photoEffects
 from datetime import datetime
-from transparentWindow import TransparentWindow
-from detailWindow import DetailWindow
-from entryCompletion import EntryCompletion
-from loadingWindow import LoadingWindow
 from cairo import ImageSurface
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject,GLib
-from photoOrganizerStorage import PhotoOrganizerPref
-from photoOrganizerUtil import Album
-from photoOrganizerUtil import PhotoFile
-from photoOrganizerUtil import PeopleTag
+from constant import constantsAccessor as K
+from gui.transparentWindow import TransparentWindow
+from gui.detailWindow import DetailWindow
+from gui.entryCompletion import EntryCompletion
+from gui.loadingWindow import LoadingWindow
+from storage.photoOrganizerStorage import PhotoOrganizerPref
+from storage import photoOrganizerStorage
+from util.photoOrganizerUtil import Album
+from util.photoOrganizerUtil import PhotoFile
+from util.photoOrganizerUtil import PeopleTag
+from util import imageUtil as I, photoOrganizerUtil
 
-#logging conf
 logging.config.fileConfig(K.LoggerConstants.DEFAULT_LOGGING_CONF)
 logger = logging.getLogger(K.LoggerConstants.DEFAULT_LOGGER_NAME)
 
@@ -137,27 +136,27 @@ class NewAlbum(threading.Thread):
             for file in files:
                 #extract creation date
                 fileCreationDate = time.ctime(os.path.getctime(path+os.sep+file))
-                fileDateTime = datetime.strptime(fileCreationDate, "%a %b %d %H:%M:%S %Y")
+                fileDateTime = datetime.strptime(fileCreationDate, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
                 fileDateTimeYear = fileDateTime.year
                 fileDateTimeMonthAsNumber = fileDateTime.month
-                fileDateTimeMonth = fileDateTime.strftime("%B")
+                fileDateTimeMonth = fileDateTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
                 if minYearFound is None:
                     minYearFound = fileDateTimeYear
                 if minMonthFound is None:
-                    minMonthFound =  fileDateTimeMonth
+                    minMonthFound = fileDateTimeMonth
                     minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                 if fileDateTimeYear < minYearFound:
                     minYearFound = fileDateTimeYear
-                    minMonthFound =  fileDateTimeMonth
+                    minMonthFound = fileDateTimeMonth
                     minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                 else:
                     if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
-                        minMonthFound =  fileDateTimeMonth
+                        minMonthFound = fileDateTimeMonth
                         minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                         #img is not in a previous scanning
                 try:
                     if imghdr.what(self.path+os.sep+file) is not None:
-                        photoFile = photoOrganizerUtil.get_exif_data(self.path+os.sep+file)
+                        photoFile = photoOrganizerUtil.get_exif_data(self.path + os.sep + file)
                         if photoFile is None:
                             photoFile = PhotoFile()
                         photoFile.dirName = path
@@ -168,7 +167,7 @@ class NewAlbum(threading.Thread):
                             photoFileDateAsTime = datetime.strptime(photoFile.date, "%Y:%m:%d %H:%M:%S")
                             fileDateTimeYear = photoFileDateAsTime.year
                             fileDateTimeMonthAsNumber = photoFileDateAsTime.month
-                            fileDateTimeMonth = photoFileDateAsTime.strftime("%B")
+                            fileDateTimeMonth = photoFileDateAsTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
                         if minYearFound is None:
                             minYearFound = fileDateTimeYear
                         if minMonthFound is None:
@@ -183,7 +182,7 @@ class NewAlbum(threading.Thread):
                                 minMonthFound = fileDateTimeMonth
                                 minMonthFoundAsNumber = fileDateTimeMonthAsNumber
 
-                                #add to dic
+                        #add to dic
                         totalPhotoDictionary[self.path + os.sep +file] = photoFile
                         #update imageMap
                         subImageMap = {}
@@ -196,8 +195,8 @@ class NewAlbum(threading.Thread):
                 except:
                     pass
 
-            if len(album.pics) >0 :
-            #must set album year and month
+            if len(album.pics) > 0:
+                #must set album year and month
                 album.year = minYearFound
                 album.month = minMonthFound
                 self.albumCollection.albums.append(album)
@@ -240,7 +239,6 @@ class UpdateAlbum(threading.Thread):
         self.statusBar = statusBar
         self.context = context
         threading.Thread.__init__(self)
-
 
     def update_tree_store(self,store,pathToSearch):
         rootiter = store.get_iter_first()
@@ -359,10 +357,9 @@ class PhotoOrganizerGUI(Gtk.Window):
             "on_PhotoOrganizer_mainFilter_clicked":self.on_PhotoOrganizer_mainFilter_clicked,
             "on_PhotoOrganizer_mainColor_clicked":self.on_PhotoOrganizer_mainColor_clicked,
             "on_PhotoOrganizer_mainLight_clicked":self.on_PhotoOrganizer_mainLight_clicked,
-            "on_PhotoOrganizer_notebook_switch": self.on_PhotoOrganizer_notebook_switch,
             "on_PhotoOrganizer_save_clicked": self.on_PhotoOrganizer_save_clicked,
             "on_PhotoOrganizer_undo_clicked": self.on_PhotoOrganizer_undo_clicked,
-            }
+        }
         #handler of GUI signals
         self.builder.connect_signals(handlers)
 
@@ -382,7 +379,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         Gtk.main()
 
     def create_image_context_menu(self):
-        action_group = Gtk.ActionGroup("my_actions")
+        action_group = Gtk.ActionGroup(K.GladeConstants.ACTION_GROUP)
         action_group.add_actions([
             ("Effects", Gtk.STOCK_ZOOM_FIT, "Effects", "<control><alt>O", None,None),
             ("Edit", Gtk.STOCK_ZOOM_FIT, "Edit", "<control><alt>O", None,None),
@@ -495,7 +492,7 @@ class PhotoOrganizerGUI(Gtk.Window):
     def on_PhotoOrganizer_delete_event(self, *args):
         if self.lastAlbumCollectionScanned is not None:
             #save the preferences
-            photoFile = PhotoOrganizerPref(self.hiddenFolders,self.entry_folder_text,self.lastAlbumCollectionScanned,self.peopleTag)
+            photoFile = PhotoOrganizerPref(self.hiddenFolders, self.entry_folder_text, self.lastAlbumCollectionScanned, self.peopleTag)
             photoOrganizerStorage.savePref(photoFile)
         Gtk.main_quit()
 
@@ -534,22 +531,22 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     def on_PhotoOrganizer_image_contextmenu_event(self, widget, event) :
         uimanager = self.create_image_context_menu()
-        self.popup = uimanager.get_widget("/PopupMenu")
-        #check if right mouse button was preseed
+        self.popup = uimanager.get_widget(K.GladeConstants.POPUP_MENU)
+        #check if right mouse button was pressed
         if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
             self.popup.popup(None, None, None, None, event.button, event.time)
             return True
 
-            #event selection of a tree entry
+    #event selection of a tree entry
     def on_PhotoOrganizer_tree_entry_selected(self, widget, data = None):
         #take the treeview linked to specific tab
-        currentPage = self.builder.get_object("notebook1").get_current_page()
-        self.currentTreeview = self.builder.get_object("treeviewAlbum")
+        currentPage = self.builder.get_object(K.GladeConstants.NOTEBOOK).get_current_page()
+        self.currentTreeview = self.builder.get_object(K.GladeConstants.TREEVIEW_ALBUM)
 
         selection = self.currentTreeview.get_selection()
         if selection is not None:
             tree_model, tree_iter = selection.get_selected()
-            if (tree_model is not None):
+            if tree_model is not None:
                 imagePath = tree_model.get_value(tree_iter, 0)
                 if os.path.isfile(imagePath):
                     self.createScaledImage(imagePath)
@@ -560,7 +557,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.createScaledImage(imagePath)
 
     def on_PhotoOrganizer_mainEdit_clicked(self,widget):
-        if(self.mainEditMenuOpened ==False):
+        if self.mainEditMenuOpened == False:
             self.mainEditMenuOpened = True
             self.mainOtherMenuOpened = False
             self.mainEffectsMenuOpened = False
@@ -569,27 +566,27 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainFilterMenuOpened = False
             self.mainColorMenuOpened = False
             self.mainLightMenuOpened = False
-            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxBottom = self.builder.get_object(K.GladeConstants.EFFECTS_SUB_MENU)
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
                 for childEl in boxChildren:
                     boxBottom.remove(childEl)
-            buttonRotateLeft = Gtk.Button("Rotate Left")
+            buttonRotateLeft = Gtk.Button(K.GUIWidgetConstants.BUTTON_ROTATE_LEFT)
             buttonRotateLeft.set_size_request(50,20)
-            buttonRotateLeft.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_rotate_clicked,True))
-            buttonRotateRight = Gtk.Button("Rotate Right")
+            buttonRotateLeft.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_rotate_clicked,True))
+            buttonRotateRight = Gtk.Button(K.GUIWidgetConstants.BUTTON_ROTATE_RIGHT)
             buttonRotateRight.set_size_request(50,20)
-            buttonRotateRight.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_rotate_right_clicked,True))
-            buttonMirror = Gtk.Button("Mirror")
+            buttonRotateRight.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_rotate_right_clicked,True))
+            buttonMirror = Gtk.Button(K.GUIWidgetConstants.BUTTON_MIRROR)
             buttonMirror.set_size_request(50,20)
-            buttonMirror.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_mirror_clicked,True))
-            buttonFlip = Gtk.Button("Flip")
+            buttonMirror.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_mirror_clicked,True))
+            buttonFlip = Gtk.Button(K.GUIWidgetConstants.BUTTON_FLIP)
             buttonFlip.set_size_request(50,20)
-            buttonFlip.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_flip_clicked,True))
-            buttonCrop = Gtk.Button("Crop")
+            buttonFlip.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_flip_clicked,True))
+            buttonCrop = Gtk.Button(K.GUIWidgetConstants.BUTTON_CROP)
             buttonCrop.set_size_request(50,20)
-            buttonCrop.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_crop_clicked,True))
-            buttonResize = Gtk.Button("Resize")
+            buttonCrop.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_crop_clicked,True))
+            buttonResize = Gtk.Button(K.GUIWidgetConstants.BUTTON_RESIZE)
             buttonResize.set_size_request(50,20)
             boxBottom.pack_start(buttonRotateLeft, False, False, 0)
             boxBottom.pack_start(buttonRotateRight, False, False, 0)
@@ -605,7 +602,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonResize.show()
 
     def on_PhotoOrganizer_mainTransform_clicked(self,widget):
-        if(self.mainTransformMenuOpened ==False):
+        if self.mainTransformMenuOpened == False:
             self.mainTransformMenuOpened = True
             self.mainEffectsMenuOpened = False
             self.mainOtherMenuOpened = False
@@ -614,24 +611,24 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainFilterMenuOpened = False
             self.mainColorMenuOpened = False
             self.mainLightMenuOpened = False
-            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxBottom = self.builder.get_object(K.GladeConstants.EFFECTS_SUB_MENU)
             boxChildren = boxBottom.get_children()
-            if len(boxChildren) >0:
+            if len(boxChildren) > 0:
                 for childEl in boxChildren:
                     boxBottom.remove(childEl)
-            buttonSharpness = Gtk.Button("Sharpness")
+            buttonSharpness = Gtk.Button(K.GUIWidgetConstants.BUTTON_SHARPNESS)
             buttonSharpness.set_size_request(50,20)
-            buttonSharpness.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sharpness_clicked,True))
-            buttonDeform = Gtk.Button("Deform")
+            buttonSharpness.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sharpness_clicked,True))
+            buttonDeform = Gtk.Button(K.GUIWidgetConstants.BUTTON_DEFORM)
             buttonDeform.set_size_request(50,20)
-            buttonDeform.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_deform_clicked,True))
+            buttonDeform.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_deform_clicked,True))
             boxBottom.pack_start(buttonSharpness, False, False, 0)
             boxBottom.pack_start(buttonDeform, False, False, 0)
             buttonSharpness.show()
             buttonDeform.show()
 
-    def on_PhotoOrganizer_mainStylish_clicked(self,widget):
-        if(self.mainStylishMenuOpened ==False):
+    def on_PhotoOrganizer_mainStylish_clicked(self, widget):
+        if self.mainStylishMenuOpened == False:
             self.mainStylishMenuOpened = True
             self.mainEffectsMenuOpened = False
             self.mainOtherMenuOpened = False
@@ -640,26 +637,26 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainFilterMenuOpened = False
             self.mainColorMenuOpened = False
             self.mainLightMenuOpened = False
-            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxBottom = self.builder.get_object(K.GladeConstants.EFFECTS_SUB_MENU)
             boxChildren = boxBottom.get_children()
-            if len(boxChildren) >0:
+            if len(boxChildren) > 0:
                 for childEl in boxChildren:
                     boxBottom.remove(childEl)
-            buttonBordered = Gtk.Button("Border")
+            buttonBordered = Gtk.Button(K.GUIWidgetConstants.BUTTON_BORDER)
             buttonBordered.set_size_request(50,20)
-            buttonBordered.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_border_clicked,True))
-            buttonUnbordered = Gtk.Button("Unborder")
+            buttonBordered.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_border_clicked,True))
+            buttonUnbordered = Gtk.Button(K.GUIWidgetConstants.BUTTON_UNBORDER)
             buttonUnbordered.set_size_request(50,20)
-            buttonUnbordered.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_unborder_clicked,True))
-            buttonPolaroid = Gtk.Button("Polaroid")
+            buttonUnbordered.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_unborder_clicked,True))
+            buttonPolaroid = Gtk.Button(K.GUIWidgetConstants.BUTTON_POLAROID)
             buttonPolaroid.set_size_request(50,20)
-            buttonPolaroid.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_polaroid_clicked,True))
-            buttonFrame = Gtk.Button("Frame")
+            buttonPolaroid.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_polaroid_clicked,True))
+            buttonFrame = Gtk.Button(K.GUIWidgetConstants.BUTTON_FRAME)
             buttonFrame.set_size_request(50,20)
-            buttonFrame.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_frame_clicked,True))
-            buttonWatermark = Gtk.Button("Watermark")
+            buttonFrame.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_frame_clicked,True))
+            buttonWatermark = Gtk.Button(K.GUIWidgetConstants.BUTTON_WATERMARK)
             buttonWatermark.set_size_request(50,20)
-            buttonWatermark.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_watermark_clicked,True))
+            buttonWatermark.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_watermark_clicked,True))
             boxBottom.pack_start(buttonBordered, False, False, 0)
             boxBottom.pack_start(buttonUnbordered, False, False, 0)
             boxBottom.pack_start(buttonPolaroid, False, False, 0)
@@ -672,7 +669,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonWatermark.show()
 
     def on_PhotoOrganizer_mainOther_clicked(self,widget):
-        if(self.mainOtherMenuOpened ==False):
+        if self.mainOtherMenuOpened == False:
             self.mainOtherMenuOpened = True
             self.mainEditMenuOpened = False
             self.mainEffectsMenuOpened = False
@@ -681,29 +678,29 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainFilterMenuOpened = False
             self.mainColorMenuOpened = False
             self.mainLightMenuOpened = False
-            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxBottom = self.builder.get_object(K.GladeConstants.EFFECTS_SUB_MENU)
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
                 for childEl in boxChildren:
                     boxBottom.remove(childEl)
-            buttonHistogram = Gtk.Button("Histogram")
+            buttonHistogram = Gtk.Button(K.GUIWidgetConstants.BUTTON_HISTOGRAM)
             buttonHistogram.set_size_request(50,20)
-            buttonHistogram.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_histogram_clicked,True))
-            buttonTagpeople = Gtk.Button("Tag People")
+            buttonHistogram.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_histogram_clicked,True))
+            buttonTagpeople = Gtk.Button(K.GUIWidgetConstants.BUTTON_TAG_PEOPLE)
             buttonTagpeople.set_size_request(50,20)
-            buttonTagpeople.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_tagPeople_clicked,True))
-            buttonWebcam = Gtk.Button("Webcam")
+            buttonTagpeople.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_tagPeople_clicked,True))
+            buttonWebcam = Gtk.Button(K.GUIWidgetConstants.BUTTON_WEBCAM)
             buttonWebcam.set_size_request(50,20)
-            buttonWebcam.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_webcam_clicked,True))
-            buttonGrab = Gtk.Button("Grab")
+            buttonWebcam.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_webcam_clicked,True))
+            buttonGrab = Gtk.Button(K.GUIWidgetConstants.BUTTON_GRAB_DESKTOP)
             buttonGrab.set_size_request(50,20)
-            buttonGrab.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_grabDesktop_clicked,True))
-            buttonOriginalsize = Gtk.Button("Original Size")
+            buttonGrab.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_grabDesktop_clicked,True))
+            buttonOriginalsize = Gtk.Button(K.GUIWidgetConstants.BUTTON_ORIGINAL_SIZE)
             buttonOriginalsize.set_size_request(50,20)
-            buttonOriginalsize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_original_size_clicked,False))
-            buttonDetail = Gtk.Button("Detail")
+            buttonOriginalsize.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_original_size_clicked,False))
+            buttonDetail = Gtk.Button(K.GUIWidgetConstants.BUTTON_DETAIL)
             buttonDetail.set_size_request(50,20)
-            buttonDetail.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_detail_clicked,False))
+            buttonDetail.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_detail_clicked,False))
             boxBottom.pack_start(buttonOriginalsize, False, False, 0)
             boxBottom.pack_start(buttonDetail, False, False, 0)
             boxBottom.pack_start(buttonHistogram, False, False, 0)
@@ -727,7 +724,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainFilterMenuOpened = False
             self.mainColorMenuOpened = False
             self.mainLightMenuOpened = False
-            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxBottom = self.builder.get_object(K.GladeConstants.EFFECTS_SUB_MENU)
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
                 for childEl in boxChildren:
@@ -738,56 +735,56 @@ class PhotoOrganizerGUI(Gtk.Window):
             greyImage.show()
             buttonGrey.set_size_request(50,20)
             buttonGrey.add(greyImage)
-            buttonGrey.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_greyscale_clicked,True))
+            buttonGrey.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_greyscale_clicked,True))
             buttonSepia = Gtk.Button()
             sepiaImage = Gtk.Image()
             sepiaImage.set_from_file("images/sepia.png")
             sepiaImage.show()
             buttonSepia.set_size_request(50,20)
             buttonSepia.add(sepiaImage)
-            buttonSepia.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sepia_clicked,True))
+            buttonSepia.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sepia_clicked,True))
             buttonSolarize = Gtk.Button()
             solarizeImage = Gtk.Image()
             solarizeImage.set_from_file("images/solarize.png")
             solarizeImage.show()
             buttonSolarize.set_size_request(50,20)
             buttonSolarize.add(solarizeImage)
-            buttonSolarize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_solarize_clicked,True))
+            buttonSolarize.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_solarize_clicked,True))
             buttonEqualize = Gtk.Button()
             equalizeImage = Gtk.Image()
             equalizeImage.set_from_file("images/equalize.png")
             equalizeImage.show()
             buttonEqualize.set_size_request(50,20)
             buttonEqualize.add(equalizeImage)
-            buttonEqualize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_equalize_clicked,True))
+            buttonEqualize.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_equalize_clicked,True))
             buttonDarkviolet = Gtk.Button()
             darkvioletImage = Gtk.Image()
             darkvioletImage.set_from_file("images/darkviolet.png")
             darkvioletImage.show()
             buttonDarkviolet.set_size_request(50,20)
             buttonDarkviolet.add(darkvioletImage)
-            buttonDarkviolet.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_darkViolet_clicked,True))
+            buttonDarkviolet.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_darkViolet_clicked,True))
             buttonLightgreen = Gtk.Button()
             lightgreenImage = Gtk.Image()
             lightgreenImage.set_from_file("images/lightgreen.png")
             lightgreenImage.show()
             buttonLightgreen.set_size_request(50,20)
             buttonLightgreen.add(lightgreenImage)
-            buttonLightgreen.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_lightGreen_clicked,True))
+            buttonLightgreen.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_lightGreen_clicked,True))
             buttonWhite = Gtk.Button()
             whiteImage = Gtk.Image()
             whiteImage.set_from_file("images/white.png")
             whiteImage.show()
             buttonWhite.set_size_request(50,20)
             buttonWhite.add(whiteImage)
-            buttonWhite.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_white_clicked,True))
+            buttonWhite.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_white_clicked,True))
             buttonGreen = Gtk.Button()
             greenImage = Gtk.Image()
             greenImage.set_from_file("images/green.png")
             greenImage.show()
             buttonGreen.set_size_request(50,20)
             buttonGreen.add(greenImage)
-            buttonGreen.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_green_clicked,True))
+            buttonGreen.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_green_clicked,True))
             boxBottom.pack_start(buttonGrey, False, False, 0)
             boxBottom.pack_start(buttonSepia, False, False, 0)
             boxBottom.pack_start(buttonSolarize, False, False, 0)
@@ -806,7 +803,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonGreen.show()
 
     def on_PhotoOrganizer_mainFilter_clicked(self,widget):
-        if(self.mainFilterMenuOpened ==False):
+        if self.mainFilterMenuOpened == False:
             self.mainFilterMenuOpened = True
             self.mainOtherMenuOpened = False
             self.mainEditMenuOpened = False
@@ -815,32 +812,32 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainEffectsMenuOpened = False
             self.mainColorMenuOpened = False
             self.mainLightMenuOpened = False
-            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxBottom = self.builder.get_object(K.GladeConstants.EFFECTS_SUB_MENU)
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
                 for childEl in boxChildren:
                     boxBottom.remove(childEl)
             buttonBlur = Gtk.Button("Blur")
             buttonBlur.set_size_request(50,20)
-            buttonBlur.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_blur_clicked,True))
+            buttonBlur.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_blur_clicked,True))
             buttonGaussian = Gtk.Button("Gaussian")
             buttonGaussian.set_size_request(50,20)
-            buttonGaussian.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_gaussian_clicked,True))
+            buttonGaussian.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_gaussian_clicked,True))
             buttonContour = Gtk.Button("Contour")
             buttonContour.set_size_request(50,20)
-            buttonContour.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_contour_clicked,True))
+            buttonContour.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_contour_clicked,True))
             buttonEdge = Gtk.Button("Edge")
             buttonEdge.set_size_request(50,20)
-            buttonEdge.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_edge_clicked,True))
+            buttonEdge.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_edge_clicked,True))
             buttonEmboss = Gtk.Button("Emboss")
             buttonEmboss.set_size_request(50,20)
-            buttonEmboss.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_emboss_clicked,True))
+            buttonEmboss.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_emboss_clicked,True))
             buttonSmooth = Gtk.Button("Smooth")
             buttonSmooth.set_size_request(50,20)
-            buttonSmooth.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_smooth_clicked,True))
+            buttonSmooth.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_smooth_clicked,True))
             buttonSharpen = Gtk.Button("Sharpen")
             buttonSharpen.set_size_request(50,20)
-            buttonSharpen.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sharpen_clicked,True))
+            buttonSharpen.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_sharpen_clicked,True))
             boxBottom.pack_start(buttonBlur, False, False, 0)
             boxBottom.pack_start(buttonGaussian, False, False, 0)
             boxBottom.pack_start(buttonContour, False, False, 0)
@@ -857,7 +854,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             buttonSharpen.show()
 
     def on_PhotoOrganizer_mainColor_clicked(self,widget):
-        if(self.mainColorMenuOpened ==False):
+        if self.mainColorMenuOpened == False:
             self.mainColorMenuOpened = True
             self.mainOtherMenuOpened = False
             self.mainEditMenuOpened = False
@@ -866,26 +863,26 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainEffectsMenuOpened = False
             self.mainFilterMenuOpened = False
             self.mainLightMenuOpened = False
-            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxBottom = self.builder.get_object(K.GladeConstants.EFFECTS_SUB_MENU)
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
                 for childEl in boxChildren:
                     boxBottom.remove(childEl)
             buttonColor = Gtk.Button("Color")
             buttonColor.set_size_request(50,20)
-            buttonColor.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_color_clicked,True))
+            buttonColor.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_color_clicked,True))
             buttonColorize = Gtk.Button("Colorize")
             buttonColorize.set_size_request(50,20)
-            buttonColorize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_colorize_clicked,True))
+            buttonColorize.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_colorize_clicked,True))
             buttonPosterize = Gtk.Button("Posterize")
             buttonPosterize.set_size_request(50,20)
-            buttonPosterize.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_posterize_clicked,True))
+            buttonPosterize.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_posterize_clicked,True))
             buttonContrast = Gtk.Button("Contrast")
             buttonContrast.set_size_request(50,20)
-            buttonContrast.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_contrast_clicked,True))
+            buttonContrast.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_contrast_clicked,True))
             buttonAutocontrast = Gtk.Button("Autocontrast")
             buttonAutocontrast.set_size_request(50,20)
-            buttonAutocontrast.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_autocontrast_clicked,True))
+            buttonAutocontrast.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_autocontrast_clicked,True))
             boxBottom.pack_start(buttonColor, False, False, 0)
             boxBottom.pack_start(buttonColorize, False, False, 0)
             boxBottom.pack_start(buttonPosterize, False, False, 0)
@@ -907,32 +904,26 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.mainEffectsMenuOpened = False
             self.mainFilterMenuOpened = False
             self.mainColorMenuOpened = False
-            boxBottom = self.builder.get_object("submainFunctionalitiesMenu")
+            boxBottom = self.builder.get_object(K.GladeConstants.EFFECTS_SUB_MENU)
             boxChildren = boxBottom.get_children()
             if len(boxChildren) >0:
                 for childEl in boxChildren:
                     boxBottom.remove(childEl)
             buttonInvert = Gtk.Button("Invert")
             buttonInvert.set_size_request(50,20)
-            buttonInvert.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_invert_clicked,True))
+            buttonInvert.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_invert_clicked,True))
             buttonBrightness = Gtk.Button("Brightness")
             buttonBrightness.set_size_request(50,20)
-            buttonBrightness.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_brightness_clicked,True))
+            buttonBrightness.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_brightness_clicked,True))
             buttonLight = Gtk.Button("Light")
             buttonLight.set_size_request(50,20)
-            buttonLight.connect("clicked", lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_light_clicked,True))
+            buttonLight.connect(K.GUIEventsConstants.BUTTON_CLICKED, lambda w: self.on_apply_effects(widget,self.on_PhotoOrganizer_light_clicked,True))
             boxBottom.pack_start(buttonInvert, False, False, 0)
             boxBottom.pack_start(buttonBrightness, False, False, 0)
             boxBottom.pack_start(buttonLight, False, False, 0)
             buttonInvert.show()
             buttonBrightness.show()
             buttonLight.show()
-
-    def on_PhotoOrganizer_notebook_switch(self, obj1, obj2, i):
-        if self.builder.get_object(K.GladeConstants.NOTEBOOK).get_current_page() == 0:
-            self.builder.get_object("box2").set_visible(True)
-        else:
-            self.builder.get_object("box2").set_visible(False)
 
     def revertFromDrawingArea(self):
         if self.drawingAreaOpened is True:
@@ -1185,14 +1176,14 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.imageOpened.set_from_pixbuf(oldPixBuf)
 
     def on_PhotoOrganizer_save_clicked(self, widget):
-        dialog = Gtk.FileChooserDialog("Save your image", self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
+        dialog = Gtk.FileChooserDialog(K.GUIMessageConstants.SAVE_IMAGE, self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
         dialog.set_default_size(800, 400)
 
         Gtk.FileChooser.set_do_overwrite_confirmation(dialog, True)
-        Gtk.FileChooser.set_current_name(dialog, "Untitled document")
+        Gtk.FileChooser.set_current_name(dialog, K.GUIMessageConstants.UNTITLED_DOC)
 
         filter = Gtk.FileFilter()
-        filter.set_name("All files")
+        filter.set_name(K.GUIMessageConstants.ALL_FILES)
         filter.add_pattern("*")
         dialog.add_filter(filter)
 
@@ -1217,7 +1208,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                 Gtk.main_iteration_do(False)
             #should pass the quality
             outputExt = filename[filename.index('.')+1:]
-            photoOrganizerUtil.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(), outputExt, 100, filename)
+            I.savePhotoFromPixbuf(self.imageOpened.get_pixbuf(), outputExt, 100, filename)
         else:
             dialog.destroy()
 
@@ -1502,7 +1493,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
 
         # scale the image          
-        self.scaled_buf = photoEffects.scaleImageFromPixbuf(pixbuf,GdkPixbuf.InterpType.HYPER)
+        self.scaled_buf = photoEffects.scaleImageFromPixbuf(pixbuf, GdkPixbuf.InterpType.HYPER)
         pimage.set_from_pixbuf(self.scaled_buf)
         self.imagePathOpened = imagePath
         self.createImagePanel(pimage)
@@ -1515,7 +1506,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             pass
         eventBox = Gtk.EventBox()
         eventBox.connect(K.GUIEventsConstants.BUTTON_PRESS,self.on_PhotoOrganizer_image_contextmenu_event)
-        if(pimage is not None):
+        if pimage is not None:
             eventBox.add(pimage)
             #reference to image selected
             self.imageOpened = pimage
@@ -1617,7 +1608,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             loadWindow.close_window()
             self.on_PhotoOrganizer_search_error_event()
 
-            #create the main panel with a tree
+    #create the main panel with a tree
     def createFixedPhotoTree(self,albumCollection,peopleTag,treeview):
         yearDictionary = {}
         monthDictionary = {}
@@ -1664,7 +1655,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         titleTree = "Album found ("+str(len(albumCollection.albums))+") - Total pics ("+str(albumCollection.totalPics)+")"
         albumNameCol = Gtk.TreeViewColumn(titleTree, albumNameCell, text=0)
         self.currentTreeview = treeview
-        treeview.connect('cursor-changed', self.on_PhotoOrganizer_tree_entry_selected)
+        treeview.connect(K.GUIEventsConstants.CURSOR_CHANGED, self.on_PhotoOrganizer_tree_entry_selected)
         treeview.insert_column(albumNameCol, 0)
 
     def removeSearchResult(self,treeview):
@@ -1680,7 +1671,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         #load preferences
         self.photoOrganizerPref = photoOrganizerStorage.loadPref()
         self.peopleTag = None
-        if(self.photoOrganizerPref!=None):
+        if self.photoOrganizerPref!=None:
             self.peopleTag = self.photoOrganizerPref.peopleTag
             try:
                 #load album saved
@@ -1696,7 +1687,6 @@ class PhotoOrganizerGUI(Gtk.Window):
                     for photo in album.pics:
                         totalPhotoDictionary[album.title+os.sep+photo.fileName] = photo
 
-
                 #set current tab
                 self.builder.get_object(K.GladeConstants.NOTEBOOK).set_current_page(0)
                 leftPanel = self.builder.get_object(K.GladeConstants.LEFTPANEL)
@@ -1711,7 +1701,7 @@ class PhotoOrganizerGUI(Gtk.Window):
                     scan = UpdateAlbum(album,treeview.get_model(),statusBar,context)
                     threads.append(scan)
                     scan.start()
-                    #check if there are new albums
+                #check if there are new albums
                 self.photoOrganizerPref.lastSearch
                 for (path, dirs, files) in os.walk(self.photoOrganizerPref.lastSearch):
                     foundAlbum = False

@@ -4,8 +4,10 @@ Created on Apr 9, 2013
 @author: hifly
 '''
 
-from transparentWindow import TransparentWindow
 from gi.repository import Gtk, Gdk,GdkPixbuf
+
+from gui.transparentWindow import TransparentWindow
+
 
 class EditWindow (TransparentWindow):
     def __init__(self,imagePath):

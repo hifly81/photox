@@ -8,7 +8,6 @@ try:
     import cPickle as pickle
 except:
     import pickle
-import sys
 import os
 
 class PhotoOrganizerPref:
@@ -52,4 +51,4 @@ def loadPref():
                 else:
                     return pref   
         finally:
-            in_s.close()       
+            in_s.close()

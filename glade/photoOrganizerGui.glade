@@ -161,7 +161,6 @@
               <object class="GtkNotebook" id="notebook1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <signal name="switch-page" handler="on_PhotoOrganizer_notebook_switch" swapped="no"/>
                 <child>
                   <object class="GtkScrolledWindow" id="leftPanel">
                     <property name="visible">True</property>
