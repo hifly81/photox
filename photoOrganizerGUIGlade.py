@@ -24,8 +24,8 @@ from gui.transparentWindow import TransparentWindow
 from gui.detailWindow import DetailWindow
 from gui.entryCompletion import EntryCompletion
 from gui.loadingWindow import LoadingWindow
-from storage.photoOrganizerStorage import PhotoOrganizerPref
-from storage import photoOrganizerStorage
+from storage.albumStorage import PhotoOrganizerPref
+from storage import albumStorage
 from util.photoOrganizerUtil import Album
 from util.photoOrganizerUtil import PhotoFile
 from util.photoOrganizerUtil import PeopleTag
@@ -493,7 +493,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         if self.lastAlbumCollectionScanned is not None:
             #save the preferences
             photoFile = PhotoOrganizerPref(self.hiddenFolders, self.entry_folder_text, self.lastAlbumCollectionScanned, self.peopleTag)
-            photoOrganizerStorage.savePref(photoFile)
+            albumStorage.savePref(photoFile)
         Gtk.main_quit()
 
     #event on filesystem search
@@ -1669,7 +1669,7 @@ class PhotoOrganizerGUI(Gtk.Window):
 
     def loadPreferences(self):
         #load preferences
-        self.photoOrganizerPref = photoOrganizerStorage.loadPref()
+        self.photoOrganizerPref = albumStorage.loadPref()
         self.peopleTag = None
         if self.photoOrganizerPref!=None:
             self.peopleTag = self.photoOrganizerPref.peopleTag
