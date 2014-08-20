@@ -89,6 +89,9 @@ def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, ima
     dirPath = dirPath.strip('\n')
     totalPicsFound = 0
     albumCollection = AlbumCollection()
+
+    fileDateTimeYear = None
+
     if os.path.exists(dirPath):
         for (path, dirs, files) in os.walk(dirPath):
             minYearFound = None
@@ -103,23 +106,27 @@ def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, ima
             for file in files:
                 #extract creation date
                 fileCreationDate = time.ctime(os.path.getctime(path + os.sep + file))
-                fileDateTime = datetime.strptime(fileCreationDate, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
-                fileDateTimeYear = fileDateTime.year
-                fileDateTimeMonthAsNumber = fileDateTime.month
-                fileDateTimeMonth = fileDateTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
-                if minYearFound is None:
-                    minYearFound = fileDateTimeYear
-                if minMonthFound is None:
-                   minMonthFound = fileDateTimeMonth
-                   minMonthFoundAsNumber = fileDateTimeMonthAsNumber
-                if fileDateTimeYear < minYearFound:
-                    minYearFound = fileDateTimeYear
-                    minMonthFound = fileDateTimeMonth
-                    minMonthFoundAsNumber = fileDateTimeMonthAsNumber
-                else:
-                    if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                try:
+                    fileDateTime = datetime.strptime(fileCreationDate, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
+                    fileDateTimeYear = fileDateTime.year
+                    fileDateTimeMonthAsNumber = fileDateTime.month
+                    fileDateTimeMonth = fileDateTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
+                    if minYearFound is None:
+                        minYearFound = fileDateTimeYear
+                    if minMonthFound is None:
                         minMonthFound = fileDateTimeMonth
-                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber 
+                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                    if fileDateTimeYear < minYearFound:
+                        minYearFound = fileDateTimeYear
+                        minMonthFound = fileDateTimeMonth
+                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                    else:
+                        if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                            minMonthFound = fileDateTimeMonth
+                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                except:
+                    print "Unexpected error: can't parse:", fileCreationDate
+
   
                 filename = os.path.join(path, file)
                 try:
@@ -136,17 +143,17 @@ def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, ima
                             fileDateTimeYear = photoFileDateAsTime.year
                             fileDateTimeMonthAsNumber = photoFileDateAsTime.month
                             fileDateTimeMonth = photoFileDateAsTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
-                        if minYearFound is None:
-                            minYearFound = fileDateTimeYear
-                        if minMonthFound is None:
-                            minMonthFound = fileDateTimeMonth
-                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
-                        if fileDateTimeYear < minYearFound:
-                            minYearFound = fileDateTimeYear
-                            minMonthFound = fileDateTimeMonth
-                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                            if minYearFound is None:
+                                minYearFound = fileDateTimeYear
+                            if minMonthFound is None:
+                                minMonthFound = fileDateTimeMonth
+                                minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                            if fileDateTimeYear < minYearFound:
+                                minYearFound = fileDateTimeYear
+                                minMonthFound = fileDateTimeMonth
+                                minMonthFoundAsNumber = fileDateTimeMonthAsNumber
                         else:
-                            if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                            if fileDateTimeYear is not None and fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber is not None and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
                                 minMonthFound = fileDateTimeMonth
                                 minMonthFoundAsNumber = fileDateTimeMonthAsNumber 
                     
@@ -159,7 +166,8 @@ def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, ima
             #must set album year and month   
             album.year =  minYearFound
             album.month = minMonthFound
-            listYearValue = yearDictionary.get(album.year) 
+            listYearValue = yearDictionary.get(album.year)
+            piter = None
             if listYearValue is None:
                 if album.year is not None:
                     piter = treestore.append(None, ['%s' % album.year])
