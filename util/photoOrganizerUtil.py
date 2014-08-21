@@ -94,6 +94,7 @@ def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, ima
 
     if os.path.exists(dirPath):
         for (path, dirs, files) in os.walk(dirPath):
+            validDateParsed = False;
             minYearFound = None
             minMonthFoundAsNumber = None
             minMonthFound = None
@@ -105,27 +106,33 @@ def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, ima
             album.title = path
             for file in files:
                 #extract creation date
-                fileCreationDate = time.ctime(os.path.getctime(path + os.sep + file))
                 try:
-                    fileDateTime = datetime.strptime(fileCreationDate, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
-                    fileDateTimeYear = fileDateTime.year
-                    fileDateTimeMonthAsNumber = fileDateTime.month
-                    fileDateTimeMonth = fileDateTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
-                    if minYearFound is None:
-                        minYearFound = fileDateTimeYear
-                    if minMonthFound is None:
-                        minMonthFound = fileDateTimeMonth
-                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber
-                    if fileDateTimeYear < minYearFound:
-                        minYearFound = fileDateTimeYear
-                        minMonthFound = fileDateTimeMonth
-                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber
-                    else:
-                        if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                    fileDateTime = datetime.fromtimestamp(os.path.getctime(path + os.sep + file)).strftime(K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
+                    fileDateTime = datetime.strptime(fileDateTime, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
+                    validDateParsed = True;
+                except Exception, e:
+                    print "Unexpected error: can't parse last modification date: %s" % e
+
+                if validDateParsed is True:
+                    try:
+                        fileDateTimeYear = fileDateTime.year
+                        fileDateTimeMonthAsNumber = fileDateTime.month
+                        fileDateTimeMonth = fileDateTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
+                        if minYearFound is None:
+                            minYearFound = fileDateTimeYear
+                        if minMonthFound is None:
                             minMonthFound = fileDateTimeMonth
-                        minMonthFoundAsNumber = fileDateTimeMonthAsNumber
-                except:
-                    print "Unexpected error: can't parse:", fileCreationDate
+                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                        if fileDateTimeYear < minYearFound:
+                            minYearFound = fileDateTimeYear
+                            minMonthFound = fileDateTimeMonth
+                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                        else:
+                            if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
+                                minMonthFound = fileDateTimeMonth
+                            minMonthFoundAsNumber = fileDateTimeMonthAsNumber
+                    except Exception, e:
+                        print "Unexpected error: can't parse: %s" % e
 
   
                 filename = os.path.join(path, file)
@@ -221,36 +228,39 @@ def get_exif_data(fname):
     try:
         img = Image.open(fname)
         if hasattr( img, '_getexif' ):
-            exifinfo = img._getexif()
-            if exifinfo != None:
-                for tag, value in exifinfo.items():
-                    decoded = TAGS.get(tag, tag)
-                    if decoded == "GPSInfo":
-                        lat,longit = geoUtil.extractCoordinates(value)
-                    else:
-                        ret[decoded] = value
+            try:
+                exifinfo = img._getexif()
+                if exifinfo != None:
+                    for tag, value in exifinfo.items():
+                        decoded = TAGS.get(tag, tag)
+                        if decoded == "GPSInfo":
+                            lat,longit = geoUtil.extractCoordinates(value)
+                        else:
+                            ret[decoded] = value
                     
 
-                photoFile = PhotoFile()    
-                if(ret.has_key('DateTimeDigitized')):    
-                    photoFile.date=ret['DateTimeDigitized']
-                if(ret.has_key('ImageDescription')):    
-                    photoFile.description=ret['ImageDescription']
-                if(ret.has_key('Make')):    
-                    photoFile.brand=ret['Make']
-                if(ret.has_key('Model')):     
-                    photoFile.model=ret['Model']
-                if(ret.has_key('ExifImageWidth')):     
-                    photoFile.width=ret['ExifImageWidth']
-                if(ret.has_key('ExifImageHeight')):     
-                    photoFile.height=ret['ExifImageHeight'] 
-                if(ret.has_key('Copyright')):     
-                    photoFile.copyright=ret['Copyright']
+                    photoFile = PhotoFile()
+                    if(ret.has_key('DateTimeDigitized')):
+                        photoFile.date=ret['DateTimeDigitized']
+                    if(ret.has_key('ImageDescription')):
+                        photoFile.description=ret['ImageDescription']
+                    if(ret.has_key('Make')):
+                        photoFile.brand=ret['Make']
+                    if(ret.has_key('Model')):
+                        photoFile.model=ret['Model']
+                    if(ret.has_key('ExifImageWidth')):
+                        photoFile.width=ret['ExifImageWidth']
+                    if(ret.has_key('ExifImageHeight')):
+                        photoFile.height=ret['ExifImageHeight']
+                    if(ret.has_key('Copyright')):
+                        photoFile.copyright=ret['Copyright']
                     
-                if lat:
-                    photoFile.latitude = lat
-                if longit:
-                    photoFile.longitude = longit
+                    if lat:
+                        photoFile.latitude = lat
+                    if longit:
+                        photoFile.longitude = longit
+            except Exception, e:
+                print "Unexpected error: can't extract exif data: %s" % e
                                     
                 
     except IOError:

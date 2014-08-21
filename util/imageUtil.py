@@ -28,7 +28,7 @@ def fromImageToPixbuf(y):
 
 def fromPixbufToPilImage(pixbuf):
     width,height = pixbuf.get_width(),pixbuf.get_height()
-    y = Image.fromstring(K.ImageConstants.RGB_SHORT_NAME,(width,height),pixbuf.get_pixels() )
+    y = Image.frombytes(K.ImageConstants.RGB_SHORT_NAME,(width,height),pixbuf.get_pixels() )
     return y
 
 def savePhotoFromUrl(url,filename):

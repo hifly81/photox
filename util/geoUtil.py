@@ -10,6 +10,11 @@ from PIL.ExifTags import GPSTAGS
 
 
 def extractCoordinates(exifValue):
+    latRef = None
+    longitRef = None
+    lat = None
+    longit = None
+
     #geocoding
     gpsData = {}
     for gpsTag in exifValue:
@@ -27,9 +32,9 @@ def extractCoordinates(exifValue):
     if "GPSLongitudeRef" in gpsData:
         longitRef =  gpsData["GPSLongitudeRef"]
 
-    if latRef != "N":
+    if latRef is not None and latRef != "N":
         lat = 0 - lat
-    if longitRef != "E":
+    if longitRef is not None and longitRef != "E":
         longit = 0 - longit
 
     return lat,longit

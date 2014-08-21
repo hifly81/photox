@@ -9,14 +9,13 @@ Created on Mar 01, 2013
 
 import os
 import math
-import time
 import logging.config
 import StringIO
 import imghdr
 import threading
-import Image
 import photoEffects
 from datetime import datetime
+from PIL import Image
 from cairo import ImageSurface
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject,GLib
 from constant import constantsAccessor as K
@@ -29,7 +28,7 @@ from storage import albumStorage
 from util.photoOrganizerUtil import Album
 from util.photoOrganizerUtil import PhotoFile
 from util.photoOrganizerUtil import PeopleTag
-from util import imageUtil as I, photoOrganizerUtil
+from util import imageUtil as I, fileUtil as F, photoOrganizerUtil
 
 logging.config.fileConfig(K.LoggerConstants.DEFAULT_LOGGING_CONF)
 logger = logging.getLogger(K.LoggerConstants.DEFAULT_LOGGER_NAME)
@@ -135,8 +134,8 @@ class NewAlbum(threading.Thread):
             album.title = path
             for file in files:
                 #extract creation date
-                fileCreationDate = time.ctime(os.path.getctime(path+os.sep+file))
-                fileDateTime = datetime.strptime(fileCreationDate, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
+                fileDateTime = datetime.fromtimestamp(os.path.getctime(path + os.sep + file)).strftime(K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
+                fileDateTime = datetime.strptime(fileDateTime, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
                 fileDateTimeYear = fileDateTime.year
                 fileDateTimeMonthAsNumber = fileDateTime.month
                 fileDateTimeMonth = fileDateTime.strftime(K.DateTimeConstants.MONTH_SHORTCUT)
@@ -317,7 +316,7 @@ class UpdateAlbum(threading.Thread):
             listIndex+=1
 
 
-class PhotoOrganizerGUI(Gtk.Window):
+class PhotoxGUI(Gtk.Window):
 
     def __init__(self):
         #references
@@ -928,7 +927,7 @@ class PhotoOrganizerGUI(Gtk.Window):
     def revertFromDrawingArea(self):
         if self.drawingAreaOpened is True:
             newImage = Gtk.Image()
-            pixbuf = photoEffects.fromImageToPixbuf(self.image)
+            pixbuf = I.fromImageToPixbuf(self.image)
             newImage.set_from_pixbuf(pixbuf)
             self.createImagePanel(newImage)
             self.imageOpened = newImage
@@ -1248,7 +1247,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.darea = Gtk.DrawingArea()
         pixbuf = self.imageOpened.get_pixbuf()
         width,height = pixbuf.get_width(),pixbuf.get_height()
-        self.imageForDrawing = Image.fromstring(K.ImageConstants.RGB_SHORT_NAME, (width, height), pixbuf.get_pixels())
+        self.imageForDrawing = Image.frombytes(K.ImageConstants.RGB_SHORT_NAME, (width, height), pixbuf.get_pixels())
         self.imageForDrawingStart = True
         self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.darea.connect(K.GUIEventsConstants.DRAWING_AREA_DRAW, self.on_drawing_area_tagPeople_draw)
@@ -1265,7 +1264,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         loadWindow = LoadingWindow()
         while Gtk.events_pending():
             Gtk.main_iteration_do(False)
-        self.faces = photoEffects.buildFacesCoordinates(photoEffects.fromPixbufToPilImage(pixbuf))
+        self.faces = photoEffects.buildFacesCoordinates(I.fromPixbufToPilImage(pixbuf))
         loadWindow.close_window()
         logger.debug("faces found:%d",len(self.faces))
         imagePanel.show_all()
@@ -1276,7 +1275,7 @@ class PhotoOrganizerGUI(Gtk.Window):
             self.buffer = StringIO.StringIO()
             self.image = self.imageForDrawing
             self.imageForDrawingStart = False
-            self.image.save(self.buffer, format=K.ImageConstants.PNG_EXT)
+            self.image.save(self.buffer, K.ImageConstants.PNG_EXT)
 
         self.buffer.seek(0)
         cr.save()
@@ -1378,7 +1377,7 @@ class PhotoOrganizerGUI(Gtk.Window):
         self.darea = Gtk.DrawingArea()
         pixbuf = self.imageOpened.get_pixbuf()
         width,height = pixbuf.get_width(), pixbuf.get_height()
-        self.imageForDrawing = Image.fromstring(K.ImageConstants.RGB_SHORT_NAME, (width, height), pixbuf.get_pixels())
+        self.imageForDrawing = Image.frombytes(K.ImageConstants.RGB_SHORT_NAME, (width, height), pixbuf.get_pixels())
         self.imageForDrawingStart = True
         self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.POINTER_MOTION_MASK)
         self.darea.connect(K.GUIEventsConstants.DRAWING_AREA_DRAW, self.on_drawing_area_crop_draw)
@@ -1720,7 +1719,7 @@ class PhotoOrganizerGUI(Gtk.Window):
 
 
 def init_GUI():
-    PhotoOrganizerGUI()
+    PhotoxGUI()
 
 if __name__ == "__main__":
     init_GUI()
