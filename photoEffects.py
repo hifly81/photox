@@ -11,6 +11,8 @@ import os
 import cv2
 import cv2.cv as cv
 import cairo
+import gi
+gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GdkPixbuf,Gdk,GObject
 from PIL import Image,ImageOps,ImageFilter,ImageEnhance,ImageDraw,ImageFont
 from constant import constantsAccessor as K
