@@ -497,7 +497,7 @@ class PhotoxGUI(Gtk.Window):
 
     #event on filesystem search
     def on_PhotoOrganizer_search_event(self, *args):
-        dialog = Gtk.FileChooserDialog(K.GUIMessageConstants.FOLDER_CHOOSE, self,
+        dialog = Gtk.FileChooserDialog(K.GUIMessageConstants.FOLDER_CHOOSE, None,
                                        Gtk.FileChooserAction.SELECT_FOLDER,
                                        (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                                         K.GUIMessageConstants.FILE_DIR_CHOOSE, Gtk.ResponseType.OK))
