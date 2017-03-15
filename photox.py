@@ -516,13 +516,13 @@ class PhotoxGUI(Gtk.Window):
             dialog.destroy()
 
     def on_PhotoOrganizer_generic_error_event  (self,e):
-        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,Gtk.ButtonsType.CANCEL,e)
+        dialog = Gtk.MessageDialog(None, 0, Gtk.MessageType.ERROR,Gtk.ButtonsType.CANCEL,e)
         dialog.run()
         dialog.destroy()
 
     def on_PhotoOrganizer_search_error_event  (self, *args):
         extraTextDialog = None
-        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,Gtk.ButtonsType.CANCEL,K.GUIMessageConstants.ERROR_NO_PICS)
+        dialog = Gtk.MessageDialog(None, 0, Gtk.MessageType.ERROR,Gtk.ButtonsType.CANCEL,K.GUIMessageConstants.ERROR_NO_PICS)
         extraTextDialog = K.GUIMessageConstants.ERROR_NEW_FOLDER
         dialog.format_secondary_text(extraTextDialog)
         dialog.run()
@@ -1175,7 +1175,7 @@ class PhotoxGUI(Gtk.Window):
             self.imageOpened.set_from_pixbuf(oldPixBuf)
 
     def on_PhotoOrganizer_save_clicked(self, widget):
-        dialog = Gtk.FileChooserDialog(K.GUIMessageConstants.SAVE_IMAGE, self,Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
+        dialog = Gtk.FileChooserDialog(K.GUIMessageConstants.SAVE_IMAGE, None, Gtk.FileChooserAction.SAVE,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
         dialog.set_default_size(800, 400)
 
         Gtk.FileChooser.set_do_overwrite_confirmation(dialog, True)
