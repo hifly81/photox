@@ -9,8 +9,9 @@ PHOTOX
 	 sudo yum install python-dev*
 	 sudo yum install python-pip
 	 sudo yum install numpy opencv*
-	 pip install PILLOW
-	 pip uninstall PIL
+	 sudo pip install PILLOW
+         sudo pip install opencv-python
+	 sudo pip uninstall PIL
 
 2 - Install
     run command 'python photox.py'

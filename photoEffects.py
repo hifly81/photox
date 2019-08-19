@@ -8,8 +8,7 @@ Created on Mar 21, 2013
 
 import os
 
-import cv2
-import cv2.cv as cv
+import cv2 as cv
 import cairo
 import gi
 gi.require_version('Gtk', '3.0')
