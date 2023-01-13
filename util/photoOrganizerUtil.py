@@ -11,7 +11,7 @@ import time
 import imghdr
 import logging
 import logging.config
-import geoUtil
+from util import geoUtil
 from datetime import datetime
 from time import strptime
 from gi.repository import Gtk
@@ -110,8 +110,8 @@ def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, ima
                     fileDateTime = datetime.fromtimestamp(os.path.getctime(path + os.sep + file)).strftime(K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
                     fileDateTime = datetime.strptime(fileDateTime, K.DateTimeConstants.FULL_DATE_US_SHORTCUT)
                     validDateParsed = True;
-                except Exception, e:
-                    print "Unexpected error: can't parse last modification date: %s" % e
+                except:
+                    print("Unexpected error: can't parse last modification date")
 
                 if validDateParsed is True:
                     try:
@@ -131,8 +131,8 @@ def walkDir(dirPath, hiddenFolders, statusBar, context, treestore, treeview, ima
                             if fileDateTimeYear < minYearFound and fileDateTimeMonthAsNumber < minMonthFoundAsNumber:
                                 minMonthFound = fileDateTimeMonth
                             minMonthFoundAsNumber = fileDateTimeMonthAsNumber
-                    except Exception, e:
-                        print "Unexpected error: can't parse: %s" % e
+                    except Exception:
+                        print("Unexpected error: can't parse")
 
   
                 filename = os.path.join(path, file)
@@ -259,8 +259,8 @@ def get_exif_data(fname):
                         photoFile.latitude = lat
                     if longit:
                         photoFile.longitude = longit
-            except Exception, e:
-                print "Unexpected error: can't extract exif data: %s" % e
+            except Exception :
+                print("Unexpected error: can't extract exif data")
                                     
                 
     except IOError:

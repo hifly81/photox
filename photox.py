@@ -10,7 +10,10 @@ Created on Mar 01, 2013
 import os
 import math
 import logging.config
-import StringIO
+try:
+    from StringIO import StringIO ## for Python 2
+except ImportError:
+    from io import StringIO ## for Python 3
 import imghdr
 import threading
 import photoEffects
@@ -1272,7 +1275,7 @@ class PhotoxGUI(Gtk.Window):
     def on_drawing_area_tagPeople_draw(self, wid, cr):
         #the image cannot be loaded every time --> repaint
         if self.imageForDrawingStart == True:
-            self.buffer = StringIO.StringIO()
+            self.buffer = StringIO()
             self.image = self.imageForDrawing
             self.imageForDrawingStart = False
             self.image.save(self.buffer, K.ImageConstants.PNG_EXT)
@@ -1393,7 +1396,7 @@ class PhotoxGUI(Gtk.Window):
     def on_drawing_area_crop_draw(self, wid, cr):
         #the image cannot be loaded every time --> repaint
         if self.imageForDrawingStart == True:
-            self.buffer = StringIO.StringIO()
+            self.buffer = StringIO()
             self.image = self.imageForDrawing
             self.imageForDrawingStart = False
             self.image.save(self.buffer, format=K.ImageConstants.PNG_EXT)
@@ -1437,7 +1440,7 @@ class PhotoxGUI(Gtk.Window):
             cr.rectangle(0, 0, 1024, 768)
             cr.fill()
 
-            self.buffer = StringIO.StringIO()
+            self.buffer = StringIO()
             self.image.save(self.buffer, format=K.ImageConstants.PNG_EXT)
             self.buffer.seek(0)
             cr.save()

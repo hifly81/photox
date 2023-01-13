@@ -7,7 +7,6 @@ Created on Mar 21, 2013
 '''
 
 import os
-
 import cv2 as cv
 import cairo
 import gi
