@@ -10,6 +10,10 @@ try:
     from StringIO import StringIO ## for Python 2
 except ImportError:
     from io import StringIO ## for Python 3
+try:
+    from BytesIO import BytesIO ## for Python 2
+except ImportError:
+    from io import BytesIO ## for Python 3
 import urllib
 from PIL import Image
 from gi.repository import GdkPixbuf
@@ -19,7 +23,7 @@ from constant import constantsAccessor as K
 def fromImageToPixbuf(y):
     if y.mode != K.ImageConstants.RGB_SHORT_NAME:
         y = y.convert(K.ImageConstants.RGB_SHORT_NAME)
-    buff = StringIO()
+    buff = BytesIO()
     y.save(buff, 'ppm')
     contents = buff.getvalue()
     buff.close()
