@@ -7,7 +7,7 @@ Created on Mar 21, 2013
 '''
 
 import os
-import cv2 as cv
+import cv2
 import cairo
 import gi
 gi.require_version('Gtk', '3.0')
@@ -386,7 +386,7 @@ def captureWebcamImage():
     ramp_frames = 30
     camera = cv2.VideoCapture(camera_port)
     #time to adjust camera
-    for i in xrange(ramp_frames):
+    for i in range(ramp_frames):
         camera.read()
     retval, data = camera.read()
     #tmp file
